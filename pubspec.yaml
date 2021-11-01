@@ -28,6 +28,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  http: ^0.13.3
+  shared_preferences: ^2.0.7
+  device_info: ^2.0.3
 
 dev_dependencies:
   flutter_test:
@@ -38,7 +41,17 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
-
+  fonts:
+    - family: NunitoSans
+      fonts:
+        - asset: ./assets/NunitoSans-Regular.ttf
+        - asset: ./assets/NunitoSans-Light.ttf
+        - asset: ./assets/NunitoSans-SemiBold.ttf
+    - family: Nunito
+      fonts:
+        - asset: ./assets/Nunito-Regular.ttf
+        - asset: ./assets/Nunito-Light.ttf
+        - asset: ./assets/Nunito-SemiBold.ttf
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
