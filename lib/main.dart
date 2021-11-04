@@ -1,4 +1,5 @@
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
+import 'package:fcg_app/pages/calendar.dart';
 import 'package:fcg_app/pages/home.dart';
 import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
 import 'package:flutter/cupertino.dart';
@@ -93,11 +94,11 @@ class _MyHomePageState extends State<Home> {
     List<Widget> pages = [
       Container(
         alignment: Alignment.center,
-        child: HomeScreen(username: 'Tom'),
+        child: HomeScreen(username: 'Johanna'),
       ),
       Container(
         alignment: Alignment.center,
-        child: Text("Woche",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+        child: CalendarScreen(),
       ),
       Container(
         alignment: Alignment.center,
@@ -116,6 +117,58 @@ class _MyHomePageState extends State<Home> {
   }
 
 }
+
+class CalendarElement extends StatefulWidget {
+  const CalendarElement({Key? key, required this.time, required this.title, required this.subtitle, required this.date}) : super(key: key);
+
+  //final Map<String, dynamic> timetableObjects;
+
+  final String date, title, subtitle, time;
+
+  @override
+  _CalendarElementState createState() => _CalendarElementState();
+}
+
+class _CalendarElementState extends State<CalendarElement> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(left: 20.0, right: 20.0),
+      child: Column(children: <Widget>[
+        Row(children: <Widget>[
+          Expanded(
+            child: new Container(
+                margin: const EdgeInsets.only(left: 10.0, right: 20.0),
+                child: Divider(
+                  color: Colors.grey.shade600,
+                  height: 36,
+                )),
+          ),
+          Text(
+            widget.date,
+            style: TextStyle(
+              fontSize: 16,
+                color: Colors.white
+            ),
+          ),
+          Expanded(
+            child: new Container(
+                margin: const EdgeInsets.only(left: 20.0, right: 10.0),
+                child: Divider(
+                  color: Colors.grey.shade600,
+                  height: 36,
+                )),
+          ),
+        ]),
+        InkWell(
+          child: CalenderElementBox(hour: widget.time, title: widget.title, subtitle: widget.subtitle, color: Colors.blue),
+          onTap: () => {showTimeTable(context, {"id": "1231", "message": "Klausur"})},
+        )
+      ]),
+    );
+  }
+}
+
 
 /*
 * Timetable element
@@ -173,6 +226,74 @@ class _TimetableElementState extends State<TimetableElement> {
     );
   }
 }
+
+class CalenderElementBox extends StatefulWidget {
+  const CalenderElementBox({Key? key, required this.hour, required this.title, required this.subtitle, required this.color}) : super(key: key);
+
+  final String hour, title, subtitle;
+  final Color color;
+
+  @override
+  _CalenderElementBoxState createState() => _CalenderElementBoxState();
+}
+
+class _CalenderElementBoxState extends State<CalenderElementBox> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: 100.0,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(13.0),
+        color: Color.fromRGBO(255, 255, 255, 0.13),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Container(
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 80,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(15),
+                        bottomLeft: Radius.circular(15)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.hour,
+                      style: TextStyle(fontSize: 27.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+                    ),
+                  ),
+                ),
+                Container(
+                  child: Text(
+                    widget.title + '\n' + widget.subtitle,
+                    style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            alignment: Alignment.centerRight,
+            width: 20,
+            height: 100,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(15),
+                    bottomRight: Radius.circular(15)),
+                color: widget.color
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class TimetableElementBox extends StatefulWidget {
   const TimetableElementBox({Key? key, required this.hour, required this.title, required this.subtitle, required this.color}) : super(key: key);

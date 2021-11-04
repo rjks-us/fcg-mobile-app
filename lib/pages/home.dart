@@ -101,12 +101,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     )
                 ),
-                TimetableElement(time: '8:30', hour: '1.', title: 'Biologie GK-2', subtitle: 'Ch1 | Eike Lückerath', color: Colors.green, status: 0),
-                TimetableElement(time: '9:15', hour: '2.', title: 'Religion GK-4', subtitle: 'K6 | Veit Reiß', color: Colors.red, status: 1),
-                TimetableElement(time: '10:20', hour: '3.', title: 'Mathematik GK-3', subtitle: 'K8 | Liv Marqiass', color: Colors.yellow, status: 2),
-                TimetableElement(time: '11:05', hour: '4.', title: 'Mathematik GK-3', subtitle: 'K8 | Liv Marqiass', color: Colors.yellow, status: 2),
-                TimetableElement(time: '12:50', hour: '5.', title: 'Sport GK-1', subtitle: 'SCH | Liv Marqiass', color: Colors.green, status: 0),
-                TimetableElement(time: '13:25', hour: '6.', title: 'Sport GK-1', subtitle: 'SCH | Liv Marqiass', color: Colors.green, status: 0,),
+                TimetableElement(time: '8:30', hour: '1.', title: 'Biologie GK-2', subtitle: 'Ch1 - Eike Lückerath', color: Colors.green, status: 0),
+                TimetableElement(time: '9:15', hour: '2.', title: 'Religion GK-4', subtitle: 'K6 - Veit Reiß', color: Colors.red, status: 1),
+                TimetableElement(time: '10:20', hour: '3.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', color: Colors.yellow, status: 2),
+                TimetableElement(time: '11:05', hour: '4.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', color: Colors.yellow, status: 2),
+                TimetableElement(time: '12:50', hour: '5.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', color: Colors.green, status: 0),
+                TimetableElement(time: '13:25', hour: '6.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', color: Colors.green, status: 0,),
                 Container(
                   margin: EdgeInsets.all(20.0),
                   child: Text(
