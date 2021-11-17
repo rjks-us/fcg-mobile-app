@@ -13,5 +13,7 @@ void getDeviceInformation() async {
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       print(androidInfo);
     }
-  } catch (_) {}
+  } catch (_) {
+    print(_);
+  }
 }

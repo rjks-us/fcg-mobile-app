@@ -1,6 +1,11 @@
+import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/main.dart';
+import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+
+import 'package:fcg_app/device/device.dart' as device;
 
 import '../modal/modal_bottom_sheet.dart';
 
@@ -19,14 +24,29 @@ class _HomeScreenState extends State<HomeScreen> {
     print('pressed settings button');
   }
 
-  void onRefreshPress() {
-    print('pressed settings button');
+  void onRefreshPress() async {
+
+  }
+
+  showTutorial() async {
+    if(await isSet('tutorial-home-screen-1')) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Klicke auf die Stunden um mehr Informationen zu sehen"),
+    ));
+
+    saveBoolean('tutorial-home-screen-1', true);
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Container(
+      child: VisibilityDetector(
+        key: Key('week-home-dec-${randomKey()}'), /// <-- idk why this is needed, to not touch
+        onVisibilityChanged: (info) {
+          ///showTutorial();
+        },
+        child: Container(
           height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -58,20 +78,27 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-                        Container(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.settings,
-                                color: Colors.white,
-                              ),
-                              onPressed: () => {onSettingsPress()},
-                            )
-                        )
+                        /*Container( ///<--- Settings Gear, moved to nav bar
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => {onSettingsPress()},
+                          )
+                      )*/
                       ],
                     )
                 ),
-                AlertBox(label: '01.', text: 'November 2021, 2. Quatal'),
+                AlertBox(
+                  color: Color.fromRGBO(156, 99, 255, 1),
+                  text: 'November 2021, 2. Quatal',
+                  label: Text(
+                    '17.',
+                    style: TextStyle(fontSize: 27.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+                  ),
+                ),
                 Container(
                     alignment: Alignment.topLeft,
                     margin: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -120,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               ],
             ),
-          )
+          ),
+        ),
       ),
     );
   }

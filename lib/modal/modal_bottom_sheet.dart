@@ -20,9 +20,9 @@ class TimeTable {
 void showTimeTable(var context, Map<String, dynamic> object) {
   Widget statusMessage = Container();
 
-  print(object['status']);
+  int status = int.parse(object['status']);
 
-  if(object['status'] == 0) {
+  if(status == 0) {
     statusMessage = Container(
       color: Colors.green,
       height: 35,
@@ -34,7 +34,8 @@ void showTimeTable(var context, Map<String, dynamic> object) {
         ),
       ),
     );
-  } else if(object['status'] == 1) {
+  } else if(status == 1) {
+    print('deb');
     statusMessage = Container(
       color: Colors.red,
       height: 35,
@@ -46,7 +47,7 @@ void showTimeTable(var context, Map<String, dynamic> object) {
         ),
       ),
     );
-  } else if(object['status'] == 2) {
+  } else if(status == 2) {
     statusMessage = Container(
       color: Colors.orange,
       height: 35,

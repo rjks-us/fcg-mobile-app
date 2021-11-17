@@ -1,37 +1,53 @@
+import 'package:fcg_app/api/timetable.dart';
+import 'package:fcg_app/api/utils.dart';
+import 'package:fcg_app/device/device.dart' as device;
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
-import 'package:fcg_app/pages/calendar.dart';
+import 'package:fcg_app/pages/components/comp.dart';
 import 'package:fcg_app/pages/home.dart';
+import 'package:fcg_app/pages/setup/app_setup.dart';
 import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
+import 'package:fcg_app/pages/tmp/week.dart';
+import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'api/helper.dart';
-import 'api/device.dart';
-import 'api/utils.dart';
+bool dev = true;
 
 void main() async {
-  Map<String, dynamic> version = await getVersion();
-  print(version);
 
-  getDeviceInformation();
+  // print(await apiIsOnline()); ///APP SEEMS TO HAVE NO INTERNET CONNECTION OR API IS OFFLINE
+
+  //print(await getClasses());
+
+  ///tmp move later to setup flow
+  if(!await device.deviceRegistered()) {
+    await device.register();
+  } else {
+    print('Current device is already registered');
+    if(!await device.isSessionValid()) device.refreshSession();
+  }
+
   runApp(App());
 }
 
 class App extends StatelessWidget {
   // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'FCG App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Home(),
+      home: SelectClass(),
     );
   }
 }
 
 class Home extends StatefulWidget {
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -74,19 +90,19 @@ class _MyHomePageState extends State<Home> {
           textAlign: TextAlign.center,
         ),
         BottomNavyBarItem(
-          icon: Icon(Icons.calendar_today),
-          title: Text('Kalender'),
-          activeColor: Colors.purpleAccent,
-          inactiveColor: _inactiveColor,
-          textAlign: TextAlign.center,
-        ),
-        BottomNavyBarItem(
           icon: Icon(Icons.backpack),
           title: Text("ToDo's"),
           activeColor: Colors.pink,
           inactiveColor: _inactiveColor,
           textAlign: TextAlign.center,
-        )
+        ),
+        BottomNavyBarItem(
+          icon: Icon(Icons.settings),
+          title: Text('Sonstiges'),
+          activeColor: Colors.purpleAccent,
+          inactiveColor: _inactiveColor,
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
@@ -98,15 +114,15 @@ class _MyHomePageState extends State<Home> {
       ),
       Container(
         alignment: Alignment.center,
-        child: CalendarScreen(),
+        child: WeekScreen(),
       ),
       Container(
         alignment: Alignment.center,
-        child: Text("Kalender",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+        child: Text("ToDo's",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
       ),
       Container(
         alignment: Alignment.center,
-        child: Text("ToDo",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+        child: Text("Sonstiges",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
       )
     ];
 
@@ -115,60 +131,7 @@ class _MyHomePageState extends State<Home> {
       children: pages,
     );
   }
-
 }
-
-class CalendarElement extends StatefulWidget {
-  const CalendarElement({Key? key, required this.time, required this.title, required this.subtitle, required this.date}) : super(key: key);
-
-  //final Map<String, dynamic> timetableObjects;
-
-  final String date, title, subtitle, time;
-
-  @override
-  _CalendarElementState createState() => _CalendarElementState();
-}
-
-class _CalendarElementState extends State<CalendarElement> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 20.0),
-      child: Column(children: <Widget>[
-        Row(children: <Widget>[
-          Expanded(
-            child: new Container(
-                margin: const EdgeInsets.only(left: 10.0, right: 20.0),
-                child: Divider(
-                  color: Colors.grey.shade600,
-                  height: 36,
-                )),
-          ),
-          Text(
-            widget.date,
-            style: TextStyle(
-              fontSize: 16,
-                color: Colors.white
-            ),
-          ),
-          Expanded(
-            child: new Container(
-                margin: const EdgeInsets.only(left: 20.0, right: 10.0),
-                child: Divider(
-                  color: Colors.grey.shade600,
-                  height: 36,
-                )),
-          ),
-        ]),
-        InkWell(
-          child: CalenderElementBox(hour: widget.time, title: widget.title, subtitle: widget.subtitle, color: Colors.blue),
-          onTap: () => {showTimeTable(context, {"id": "1231", "message": "Klausur"})},
-        )
-      ]),
-    );
-  }
-}
-
 
 /*
 * Timetable element
@@ -194,106 +157,15 @@ class _TimetableElementState extends State<TimetableElement> {
     return Container(
       margin: EdgeInsets.only(left: 20.0, right: 20.0),
       child: Column(children: <Widget>[
-        Row(children: <Widget>[
-          Expanded(
-            child: new Container(
-                margin: const EdgeInsets.only(left: 10.0, right: 20.0),
-                child: Divider(
-                  color: Colors.grey.shade600,
-                  height: 36,
-                )),
-          ),
-          Text(
-            widget.time,
-            style: TextStyle(
-                color: Colors.white
-            ),
-          ),
-          Expanded(
-            child: new Container(
-                margin: const EdgeInsets.only(left: 20.0, right: 10.0),
-                child: Divider(
-                  color: Colors.grey.shade600,
-                  height: 36,
-                )),
-          ),
-        ]),
+        Line(title: widget.time),
         InkWell(
           child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: widget.color),
-          onTap: () => {showTimeTable(context, {"id": "1231", "message": "eigenverantwortliches Arbeitens"})},
+          onTap: () => {showTimeTable(context, {"id": "1", "message": "eigenverantwortliches Arbeitens", "status": "${widget.status}"})},
         )
       ]),
     );
   }
 }
-
-class CalenderElementBox extends StatefulWidget {
-  const CalenderElementBox({Key? key, required this.hour, required this.title, required this.subtitle, required this.color}) : super(key: key);
-
-  final String hour, title, subtitle;
-  final Color color;
-
-  @override
-  _CalenderElementBoxState createState() => _CalenderElementBoxState();
-}
-
-class _CalenderElementBoxState extends State<CalenderElementBox> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: 100.0,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(13.0),
-        color: Color.fromRGBO(255, 255, 255, 0.13),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Container(
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 80,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(15),
-                        bottomLeft: Radius.circular(15)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      widget.hour,
-                      style: TextStyle(fontSize: 27.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
-                    ),
-                  ),
-                ),
-                Container(
-                  child: Text(
-                    widget.title + '\n' + widget.subtitle,
-                    style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            alignment: Alignment.centerRight,
-            width: 20,
-            height: 100,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(15),
-                    bottomRight: Radius.circular(15)),
-                color: widget.color
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 class TimetableElementBox extends StatefulWidget {
   const TimetableElementBox({Key? key, required this.hour, required this.title, required this.subtitle, required this.color}) : super(key: key);
@@ -312,8 +184,17 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
       width: MediaQuery.of(context).size.width,
       height: 100.0,
       decoration: BoxDecoration(
+        boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
         borderRadius: BorderRadius.circular(13.0),
         color: Color.fromRGBO(255, 255, 255, 0.13),
+        gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(43, 42, 47, 1),
+              Color.fromRGBO(41, 40, 43, 1.0),
+            ]
+        )
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -337,10 +218,27 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
                   ),
                 ),
                 Container(
-                  child: Text(
-                    widget.title + '\n' + widget.subtitle,
-                    style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
-                  ),
+                  height: 100,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        child: Text(
+                          widget.title,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                        ),
+                      ),
+                      Container(
+                        child: Text(
+                          widget.subtitle,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade400),
+                        ),
+                      )
+                    ],
+                  )
                 ),
               ],
             ),
@@ -368,9 +266,11 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
 * */
 
 class AlertBox extends StatefulWidget {
-  AlertBox({Key? key, required this.text, required this.label}) : super(key: key);
+  AlertBox({Key? key, required this.text, required this.label, required this.color}) : super(key: key);
 
-  final String text, label;
+  final String text;
+  final Color color;
+  final Widget label;
 
   @override
   _AlertBoxState createState() => _AlertBoxState();
@@ -396,13 +296,14 @@ class _AlertBoxState extends State<AlertBox> {
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(15),
                   bottomLeft: Radius.circular(15)),
-              color: Color.fromRGBO(156, 99, 255, 1),
+              color: widget.color,
             ),
             child: Center(
-              child: Text(
+              child: widget.label,
+              /*child: Text(
                 widget.label,
                 style: TextStyle(fontSize: 27.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
-              ),
+              ),*/
             ),
           ),
           Container(
