@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// var host = 'https://api.fcg-app.de';
 var host = 'http://localhost:8080';
 
 Future<Map<String, dynamic>> getClasses() async {

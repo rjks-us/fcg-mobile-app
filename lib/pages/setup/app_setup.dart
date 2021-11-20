@@ -3,56 +3,21 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:fcg_app/api/timetable.dart';
+import 'package:fcg_app/device/device.dart' as device;
+import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-class SetupFlow extends StatefulWidget {
-  const SetupFlow({Key? key}) : super(key: key);
-
-  @override
-  _SetupFlowState createState() => _SetupFlowState();
-}
-
-class _SetupFlowState extends State<SetupFlow> {
-
-  int _currentIndexPage = 2;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: getPage(_currentIndexPage),
-    );
-  }
-
-  Widget getPage(int index) {
-
-    List<Widget> pages = [
-      Container(
-        alignment: Alignment.center,
-        child: SelectClass(),
-      ),
-      Container(
-        alignment: Alignment.center,
-        child: SelectCourse(id: 1, name: 'Q1',),
-      ),
-      Container(
-        alignment: Alignment.center,
-        child: SetUsername(),
-      )
-    ];
-
-    return pages[index];
-  }
-}
 
 /*
 * SELECT CLASS WIDGET
 * */
 
 class SelectClass extends StatefulWidget {
-  const SelectClass({Key? key}) : super(key: key);
+  const SelectClass({Key? key, required this.userNav}) : super(key: key);
+
+  final bool userNav;
 
   @override
   _SelectClassState createState() => _SelectClassState();
@@ -75,10 +40,6 @@ class _SelectClassState extends State<SelectClass> {
     ClassPreLoadingBox(),
   ];
 
-  select(String id) {
-
-  }
-
   @override
   void initState() {
     super.initState();
@@ -86,16 +47,21 @@ class _SelectClassState extends State<SelectClass> {
   }
 
   loadElements() async {
+    log(5);
+
     List<dynamic>? classes = await getClasses();
     bool loaded = false;
+    log(3);
 
     if(classes == null) loaded = !loaded;
 
     Timer(Duration(seconds: 1), () {
       try { /// <-- To many elements in queue
         if(this.mounted) {
+          print('1');
           setState(() {
             classList.clear();
+            print('2');
 
             classes!.forEach((element) {
               Map<String, dynamic> obj = element;
@@ -105,7 +71,7 @@ class _SelectClassState extends State<SelectClass> {
                 teacher = obj['teachers'][0]; ///for this stupid AG class without a teacher
               } catch (_) {}
 
-              classList.add(ClassElement(className: obj['short'], teacher: teacher, id: obj['id']));
+              classList.add(ClassElement(className: obj['short'], teacher: teacher, id: obj['id'], userRedirect: widget.userNav,));
               classesFound++;
             });
 
@@ -120,6 +86,10 @@ class _SelectClassState extends State<SelectClass> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(54, 66, 106, 1),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         child: Container(
           height: MediaQuery.of(context).size.height,
@@ -165,10 +135,11 @@ class _SelectClassState extends State<SelectClass> {
 }
 
 class ClassElement extends StatefulWidget {
-  const ClassElement({Key? key, required this.className, required this.teacher, required this.id}) : super(key: key);
+  const ClassElement({Key? key, required this.className, required this.teacher, required this.id, required this.userRedirect}) : super(key: key);
 
   final String className, teacher;
   final int id;
+  final bool userRedirect;
 
   @override
   _ClassElementState createState() => _ClassElementState();
@@ -180,15 +151,28 @@ class _ClassElementState extends State<ClassElement> {
   List<String> specialClasses = ['Q2'];
   
   Color defaultColor = Colors.grey, specialColor = Colors.orange;
-  
+
+  bool selected = false;
+
   getSpecialClassColor(String name) { /// <-- Just for fun, cause Q2 is the best hahhahaha
     if(specialClasses.contains(name)) return specialColor;
     return defaultColor;
   }
   
   selectClass(int id) {
+    // if(selected) return; /// <--- To fast selection of multiple classes
+    // selected = true;
+
     print('Selected class ${widget.className} with id $id');
     saveInt('var-class-id', id);
+    save('var-class-name', widget.className);
+
+    Navigator.push(
+      context,
+        CupertinoPageRoute(builder: (context) => SelectCourse(name: widget.className, id: id, navFlow: widget.userRedirect, navCallback: () {
+
+        }))
+    );
   }
   
   @override
@@ -236,6 +220,7 @@ class _ClassElementState extends State<ClassElement> {
                 Row(
                   children: <Widget>[
                     Container(
+                      width: 150,
                       margin: EdgeInsets.only(right: 20),
                       child: Text(
                         widget.teacher,
@@ -275,10 +260,12 @@ class _ClassElementState extends State<ClassElement> {
 * */
 
 class SelectCourse extends StatefulWidget {
-  const SelectCourse({Key? key, required this.id, required this.name}) : super(key: key);
+  const SelectCourse({Key? key, required this.id, required this.name, required this.navFlow, required this.navCallback}) : super(key: key);
 
   final String name;
   final int id;
+  final navFlow;
+  final VoidCallback navCallback;
 
   @override
   _SelectCourseState createState() => _SelectCourseState();
@@ -286,7 +273,102 @@ class SelectCourse extends StatefulWidget {
 
 class _SelectCourseState extends State<SelectCourse> {
 
-  List<Widget> course = [];
+  int coursesFound = 0;
+  Color lastColor = Colors.red;
+
+  List<Color> colors = [Colors.blue, Colors.red, Colors.green, Colors.deepOrangeAccent];
+
+  List<Widget> section = [
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+    ClassPreLoadingBox(),
+  ];
+
+  getRandomColor() {
+    Color current = colors[new Random().nextInt(colors.length)];
+    while(current == lastColor) {
+      current = colors[new Random().nextInt(colors.length)];
+    }
+    return current;
+  }
+
+  goBack() {
+    Navigator.pop(context);
+  }
+  
+  loadElements() async {
+    Map<String, dynamic>? classes = await getSubjectList(widget.id);
+    bool loaded = false;
+
+    if(classes == null) loaded = !loaded;
+
+    Timer(Duration(seconds: 1), () {
+      try { /// <-- To many elements in queue
+        if(this.mounted) {
+          setState(() {
+            section.clear();
+
+            classes!.forEach((key, value) {
+              String sectionName = key;
+              Color sectionColor = getRandomColor();
+              List<dynamic> courses = classes[sectionName];
+
+              List<Widget> coursesCollection = [];
+
+              courses.forEach((element) {
+                Map<String, dynamic> courseElement = element, teacher = courseElement['teacher'];
+                String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
+
+                if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
+                if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
+
+                coursesCollection.add(CourseElement(id: courseElement['id'], name: '${courseElement['name']} (${courseElement['short']})', teacher: teacherName, color: sectionColor));
+              });
+              lastColor = sectionColor;
+              section.add(CourseSection(title: sectionName, color: Colors.green, courses: coursesCollection));
+            });
+          });
+        }
+      } catch(err) {
+        print(err); ///<-- Parsing error
+      }
+    });
+  }
+
+  finish() {
+    List<String> list = courses.map((e) => '$e').toList();
+    saveStringList('var-courses', list);
+    print('Saved new courses: $list');
+
+    if(!widget.navFlow) {
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Home()),
+            (Route<dynamic> route) => false,
+      );
+
+      widget.navCallback();
+      ///Restore cache
+      return;
+    }
+
+    Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (context) => SetUsername())
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadElements();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +380,7 @@ class _SelectCourseState extends State<SelectCourse> {
         ),
         width: MediaQuery.of(context).size.width,
         child: InkWell(
-          onTap: () => {},
+          onTap: () => finish(),
           child: Container(
             margin: EdgeInsets.all(10),
             height: 50,
@@ -306,10 +388,14 @@ class _SelectCourseState extends State<SelectCourse> {
                 color: Colors.blue
             ),
             child: Center(
-              child: Text('Fertig', style: TextStyle(color: Colors.white, fontSize: 22),),
+              child: Text('Nächster Schritt', style: TextStyle(color: Colors.white, fontSize: 22),),
             ),
           ),
         )
+      ),
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(54, 66, 106, 1),
+        elevation: 0,
       ),
       //Content
       body: SingleChildScrollView(
@@ -328,7 +414,6 @@ class _SelectCourseState extends State<SelectCourse> {
           ),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Container(
                   width: MediaQuery.of(context).size.width,
@@ -339,18 +424,25 @@ class _SelectCourseState extends State<SelectCourse> {
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  margin: EdgeInsets.only(left: 20.0, bottom: 20.0),
+                  margin: EdgeInsets.only(left: 20.0, bottom: 5.0),
                   child: Text('Bitte wähle deine\nKurse', style: TextStyle(color: Colors.white, fontSize: 30),),
                 ),
-                CourseSection(title: 'Mathematik', color: Colors.blue,),
-                CourseSection(title: 'Deutsch', color: Colors.red,),
-                CourseSection(title: 'Englisch', color: Colors.green,),
-                CourseSection(title: 'Sport', color: Colors.deepOrangeAccent,),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 20.0, bottom: 20.0),
+                  child: Text('Klicke auf die Kurse, um diese auszuwählen', style: TextStyle(color: Colors.grey, fontSize: 16),),
+                ),
+                Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: section,
+                  ),
+                ),
                 Container(
                     width: MediaQuery.of(context).size.width,
                     margin: EdgeInsets.all(20.0),
                     child: Center(
-                      child: Text('Insgesamt wurden ${course.length} Kurse gefunden', style: TextStyle(color: Colors.grey, fontSize: 12),),
+                      child: Text('Insgesamt wurden ${section.length} Kurse gefunden', style: TextStyle(color: Colors.grey, fontSize: 12),),
                     )
                 ),
               ],
@@ -363,10 +455,12 @@ class _SelectCourseState extends State<SelectCourse> {
 }
 
 class CourseSection extends StatefulWidget {
-  const CourseSection({Key? key, required this.title, required this.color}) : super(key: key);
+  const CourseSection({Key? key, required this.title, required this.color, required this.courses}) : super(key: key);
 
   final Color color;
   final String title;
+
+  final List<Widget> courses;
 
   @override
   _CourseSectionState createState() => _CourseSectionState();
@@ -377,24 +471,20 @@ class _CourseSectionState extends State<CourseSection> {
   @override
   Widget build(BuildContext context) {
 
-    List<Widget> list = [
-      CourseElement(id: 1, name: 'Mathematik-LK', teacher: 'Elia Lee', color: widget.color),
-      CourseElement(id: 2, name: 'Mathematik-Gk1', teacher: 'Liv Marquass', color: widget.color),
-      CourseElement(id: 3, name: 'Mathematik-Gk2', teacher: 'Michael Stenzel', color: widget.color),
-    ];
-
     return Container(
       child: Column(children: <Widget>[
         Line(title: widget.title),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: list,
+          children: widget.courses,
         )
       ]),
     );
   }
 }
 
+List<int> courses = []; ///<-- Course cache when seleced
+List<Widget> tmp_selected_couses = [];
 
 class CourseElement extends StatefulWidget {
   const CourseElement({Key? key, required this.id, required this.name, required this.teacher, required this.color}) : super(key: key);
@@ -403,12 +493,23 @@ class CourseElement extends StatefulWidget {
   final String name, teacher;
   final int id;
 
+  toggleCourse() {
+    if(courses.contains(id)) {
+      courses.remove(id);
+      tmp_selected_couses.remove(this);
+      print('Unselected course $name with id $id');
+    } else {
+      courses.add(id);
+      tmp_selected_couses.add(this);
+      print('Selected course $name with id $id');
+    }
+  }
+
   @override
   _CourseElementState createState() => _CourseElementState();
 }
 
 class _CourseElementState extends State<CourseElement> {
-
   bool selected = false;
 
   @override
@@ -419,29 +520,51 @@ class _CourseElementState extends State<CourseElement> {
       height: 80.0,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(13.0),
-          color: selected ? widget.color : Color.fromRGBO(255, 255, 255, 0.13)
+        color: selected ? widget.color : Color.fromRGBO(255, 255, 255, 0.13),
+        boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
       ),
       child: InkWell(
         onTap: () => {
           setState(() {
-            selected = !selected;
+            if(!_cancelClickEventInFinishScreen) {
+              selected = !selected;
+              widget.toggleCourse();
+            }
           })
         },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Container(
-              child: Row(
+              margin: EdgeInsets.only(left: 20),
+              height: 100,
+              width: 270,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    child: Text(
-                      '${widget.name}\n${widget.teacher}',
-                      style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
-                    ),
-                    margin: EdgeInsets.only(left: 20),
+                    child: Flexible(
+                      child: Text(
+                        widget.name,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                      ),
+                    )
                   ),
+                  Container(
+                    child: Flexible(
+                      child: Text(
+                        widget.teacher,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade400),
+                      ),
+                    )
+                  )
                 ],
-              ),
+              )
             ),
             Container(
               alignment: Alignment.centerRight,
@@ -474,75 +597,114 @@ class SetUsername extends StatefulWidget {
 }
 
 class _SetUsernameState extends State<SetUsername> {
+
+  final controller = TextEditingController();
+
+  Widget status = Text('Dein name muss mindestens 2 Zeichen lang sein', style: TextStyle(color: Colors.grey, fontSize: 16),);
+
+  finish() {
+    String content = controller.text;
+
+    if(content.length > 1 && content.length < 15) {
+      save('var-username', content);
+      print('Saved new username $content');
+      Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (context) => FinishSetupScreen())
+      );
+    } else {
+      setState(() {
+        status = Text('Der name muss mindestens 2, und maximal 15 Zeichen lang sein', style: TextStyle(color: Colors.redAccent, fontSize: 16),);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //Done Button
-      bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(29, 29, 29, 1),
-          ),
-          width: MediaQuery.of(context).size.width,
-          child: InkWell(
-            onTap: () => {},
-            child: Container(
-              margin: EdgeInsets.all(10),
-              height: 50,
-              decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(2)
-              ),
-              child: Center(
-                child: Text('Nächster Schritt', style: TextStyle(color: Colors.white, fontSize: 22),),
-              ),
-            ),
-          )
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(54, 66, 106, 1),
+        elevation: 0,
       ),
       //Content
       body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(54, 66, 106, 1),
-                  Color.fromRGBO(29, 29, 29, 1)
-                ]
-            ),
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(54, 66, 106, 1),
+                Color.fromRGBO(29, 29, 29, 1)
+              ]
           ),
+        ),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
+                margin: EdgeInsets.only(left: 20.0, bottom: 5.0, right: 20.0),
                 child: Text('Wie dürfen wir dich\nnennen?', style: TextStyle(color: Colors.white, fontSize: 30),),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
+                child: status, ///Status message
               ),
               Container(
                 margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
                 child: Center(
-                  child: TextFormField(
-                    autocorrect: false,
-                    onEditingComplete: () => {
-                      print('test')
-                    }, //Validate, we are not using the inbuild validator
-                    cursorColor: Colors.blue,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Enter your username',
-                      suffixIcon: Icon(Icons.check, color: Colors.green,),
-                    ),
-                  ),
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 10),
+                      child: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        autocorrect: false,
+                        onEditingComplete: () => {
+
+                        }, //Validate, we are not using the inbuild validator
+                        cursorColor: Colors.blue,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Dein Name',
+                          fillColor: Color.fromRGBO(54, 66, 106, 1),
+                          filled: true,
+                        ),
+                      ),
+                    )
                 ),
-              )
+              ),
+              //Done Button
+              Container(
+                  width: MediaQuery.of(context).size.width,
+                  child: InkWell(
+                    onTap: () => finish(),
+                    child: Container(
+                      margin: EdgeInsets.all(20),
+                      height: 50,
+                      decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(2)
+                      ),
+                      child: Center(
+                        child: Text('Fertig stellen', style: TextStyle(color: Colors.white, fontSize: 22),),
+                      ),
+                    ),
+                  )
+              ),
             ],
           )
+        ),
       )
     );
   }
 }
+
+///ClassElement Click event is getting canceled if this is true, just for the finish screen so you cant select courses in finish screen
+bool _cancelClickEventInFinishScreen = false;
 
 class FinishSetupScreen extends StatefulWidget {
   const FinishSetupScreen({Key? key}) : super(key: key);
@@ -552,9 +714,150 @@ class FinishSetupScreen extends StatefulWidget {
 }
 
 class _FinishSetupScreenState extends State<FinishSetupScreen> {
+  
+  String username = '', className = '';
+  List<Widget> selectedClasses = [];
+  
+  refresh() {
+    setState(() {});
+  }
+
+  loadContent() async {
+    username = await getString('var-username');
+    className = await getString('var-class-name');
+
+    List<String> tmp = await getStringList('var-courses');
+    List<int> list = tmp.map((e) => int.parse('$e')).toList();
+    
+    await getSubjectList(await getInt('var-class-id'));
+
+    refresh();
+  }
+
+  finish() async {
+    if(!await device.deviceRegistered()) {
+      await device.register();
+    } else {
+      print('Current device is already registered');
+      if(!await device.isSessionValid()) device.refreshSession();
+    }
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => Home()),
+          (Route<dynamic> route) => false,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cancelClickEventInFinishScreen = true;
+    loadContent();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _cancelClickEventInFinishScreen = false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(54, 66, 106, 1),
+        elevation: 0,
+      ),
+      bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[850],
+          ),
+          width: MediaQuery.of(context).size.width,
+          child: InkWell(
+            onTap: () => finish(),
+            child: Container(
+              margin: EdgeInsets.all(10),
+              height: 50,
+              decoration: BoxDecoration(
+                  color: Colors.blue
+              ),
+              child: Center(
+                child: Text('Fertigstellen', style: TextStyle(color: Colors.white, fontSize: 22),),
+              ),
+            ),
+          )
+      ),
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(54, 66, 106, 1),
+              Color.fromRGBO(29, 29, 29, 1)
+            ]
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.all(20.0),
+                width: MediaQuery.of(context).size.width,
+                child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Colors.indigo,
+                    ),
+                    height: 150,
+                    width: 150,
+                    child: Center(
+                      child: Text('$className', style: TextStyle(color: Colors.white, fontSize: 40),),
+                    ),
+                  ),
+                )
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(left: 20.0, bottom: 5.0, right: 20.0),
+                child: Center(
+                  child: Text('Hallo $username', style: TextStyle(color: Colors.white, fontSize: 30),),
+                ),
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
+                child: Center(
+                  child: Text('Bitte verifiziere deine Kurse', style: TextStyle(color: Colors.grey, fontSize: 20),),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 20.0),
+                child: GestureDetector(
+                  onTap: () => {},
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: tmp_selected_couses,
+                  ),
+                )
+              ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.all(20.0),
+                child: Center(
+                  child: Text('Du bist in ${tmp_selected_couses.length} Kursen', style: TextStyle(color: Colors.grey, fontSize: 12),),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

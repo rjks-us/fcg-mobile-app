@@ -4,6 +4,12 @@ import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:http/http.dart' as http;
 
+Future<bool> isDeviceSetUp() async {
+  var username = await getString('var-username'), className = await getString('var-class-name'), classId = await getInt('var-class-id');
+  if(username != 'not-defined' && className != 'not-defined' && classId != 0) return true;
+  return false;
+}
+
 ///Check if the current device is registered
 Future<bool> deviceRegistered() async {
   return (await isSet('global-access-token') && await isSet('global-access-refresh-token'));
@@ -16,12 +22,12 @@ register() async {
   print(request);
 
   var username = await getString('var-username');
-  var courses = await getJSON('var-courses');
+  var courses = await getIntList('var-courses');
   var classId = await getInt('var-class-id');
 
   if(classId == 0) classId = 242;
 
-  var push = await getString('var-class-id');
+  var push = '123123123123123123123123123123123123123123123213';
   var platform = 'IOS/15.0.2';
 
   request.body = jsonEncode({
@@ -32,7 +38,7 @@ register() async {
       'ios': '15.0.2',
       'id': '37612t687xdt167854zq8118z243875zr78zwe87rztcc67t278z78cz32c87zn7843z5b',
     },
-    'courses': [1, 2, 3],
+    'courses': courses,
     'class': classId,
     'push': push
   });
@@ -51,6 +57,8 @@ register() async {
 
     save('global-access-token', data['token']);
     save('global-access-refresh-token', data['refresh']);
+
+    save('var-creation-date', '${DateTime.now().millisecondsSinceEpoch}');
 
     print('Successfully registered the current device.');
   } else {
@@ -206,6 +214,28 @@ Future<Map<String, dynamic>?> updateToken(String token) async {
     //Wrong input
     print(response.reasonPhrase);
     return null;
+  }
+}
+
+///DANGER ZONE!!!!
+Future<bool> deleteThisDevice() async {
+  if(!await isSessionValid()) await refreshSession();
+
+  var request = createRequest('POST', 'v1/devices/delete');
+  request.headers.addAll(await getHeader());
+
+  var response = await request.send();
+
+  if (response.statusCode == 200) {
+    clearCache();
+
+    print('Successfully delete the current device');
+
+    return true; ///return response data from api
+  } else {
+    //Wrong input
+    print(response.reasonPhrase);
+    return false;
   }
 }
 

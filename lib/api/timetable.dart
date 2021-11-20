@@ -52,11 +52,14 @@ Future<List<dynamic>?> getTimeTable(DateTime date, int classId) async {
 }
 
 Future<List<dynamic>?> getTimeTableWithFilter(DateTime date, int classId, List<int> filter) async {
-  var request = createRequest('POST', 'v1/timetable/$classId/${date.year}/${date.month}/${date.day}');
+  var request = createRequest('POST', 'v1/timetable/filter/$classId/${date.year}/${date.month}/${date.day}');
 
   request.body = jsonEncode({
-    'filter': filter
+    'filter': filter,
+    'test': '123'
   });
+
+  print(request.toString());
 
   var response = await request.send();
 
@@ -67,6 +70,8 @@ Future<List<dynamic>?> getTimeTableWithFilter(DateTime date, int classId, List<i
     return body['data']; ///return response data from api
   } else {
     //Wrong input
+    print(await response.stream.bytesToString());
+    print(response.statusCode);
     print(response.reasonPhrase);
     return null;
   }

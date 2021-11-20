@@ -1,9 +1,11 @@
+import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/device/device.dart' as device;
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
 import 'package:fcg_app/pages/components/comp.dart';
 import 'package:fcg_app/pages/home.dart';
+import 'package:fcg_app/pages/settings/settings.dart';
 import 'package:fcg_app/pages/setup/app_setup.dart';
 import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
 import 'package:fcg_app/pages/tmp/week.dart';
@@ -12,20 +14,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 bool dev = true;
+bool setUp = false;
 
 void main() async {
 
-  // print(await apiIsOnline()); ///APP SEEMS TO HAVE NO INTERNET CONNECTION OR API IS OFFLINE
+  print(await getVersion());
 
-  //print(await getClasses());
-
-  ///tmp move later to setup flow
-  if(!await device.deviceRegistered()) {
-    await device.register();
-  } else {
-    print('Current device is already registered');
+  if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
+    print('deb');
+    setUp = true;
     if(!await device.isSessionValid()) device.refreshSession();
   }
+
+  print('123');
 
   runApp(App());
 }
@@ -41,7 +42,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SelectClass(),
+      home: setUp ? Home() : SelectClass(userNav: true,),
     );
   }
 }
@@ -110,7 +111,7 @@ class _MyHomePageState extends State<Home> {
     List<Widget> pages = [
       Container(
         alignment: Alignment.center,
-        child: HomeScreen(username: 'Johanna'),
+        child: HomeScreen(),
       ),
       Container(
         alignment: Alignment.center,
@@ -122,7 +123,7 @@ class _MyHomePageState extends State<Home> {
       ),
       Container(
         alignment: Alignment.center,
-        child: Text("Sonstiges",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+        child: SettingsOverviewPage(),
       )
     ];
 
@@ -138,20 +139,34 @@ class _MyHomePageState extends State<Home> {
 * */
 
 class TimetableElement extends StatefulWidget {
-  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status, required this.color}) : super(key: key);
+  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status}) : super(key: key);
 
   //final Map<String, dynamic> timetableObjects;
 
   final int status;
   final String time, hour, title, subtitle;
 
-  final Color color;
-
   @override
   _TimetableElementState createState() => _TimetableElementState();
 }
 
 class _TimetableElementState extends State<TimetableElement> {
+
+  getColor(int state) {
+    if(state == 0) {
+      print('a');
+      return Colors.green;
+    }
+    if(state == 1) {
+      print('b');
+      return Colors.red;
+    }
+    if(state == 2) {
+      print('c');
+      return Colors.yellow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -159,7 +174,7 @@ class _TimetableElementState extends State<TimetableElement> {
       child: Column(children: <Widget>[
         Line(title: widget.time),
         InkWell(
-          child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: widget.color),
+          child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: getColor(widget.status)),
           onTap: () => {showTimeTable(context, {"id": "1", "message": "eigenverantwortliches Arbeitens", "status": "${widget.status}"})},
         )
       ]),
@@ -224,15 +239,19 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Container(
+                        width: 180,
                         child: Text(
                           widget.title,
+                          overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
                           style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
                         ),
                       ),
                       Container(
+                        width: 180,
                         child: Text(
                           widget.subtitle,
+                          overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
                           style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade400),
                         ),

@@ -177,3 +177,28 @@ class _ClassPreLoadingBoxState extends State<ClassPreLoadingBox> {
   }
 }
 
+void createSettingsModalBottomSheet(var context, Widget content) {
+  showModalBottomSheet(context: context, builder: (context) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      color: Color.fromRGBO(29, 29, 29, 1),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            child: Row(
+              children: [
+                Container(
+                  child: Center(
+                    child: IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close, color: Colors.white10,)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content,
+        ],
+      ),
+    );
+  });
+}
