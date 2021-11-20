@@ -1,17 +1,52 @@
+import 'dart:async';
+
+import 'package:fcg_app/api/helper.dart';
+import 'package:fcg_app/api/timetable.dart';
+import 'package:fcg_app/api/utils.dart';
+import 'package:fcg_app/main.dart' as main;
+import 'package:fcg_app/pages/setup/app_setup.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:fcg_app/device/device.dart' as device;
+
 //Splashscreen util preparation is done
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key, required this.version, required this.author}) : super(key: key);
-
-  final String version, author;
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+
+  load() async {
+    await main.initApp();
+
+    if(main.splashScreen) {
+      next();
+    } else {
+      Timer(Duration(seconds: 2), () {
+        next();
+      });
+    }
+  }
+
+  next() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder:
+          (context) => main.setUp ? main.Home() : SelectClass(userNav: true,)),
+          (Route<dynamic> route) => false,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,9 +77,9 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Text('Made by ${widget.author}', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                  Text('Powered by rjks.us', style: TextStyle(color: Colors.white, fontSize: 18)),
-                  Text('\nv${widget.version}', style: TextStyle(color: Colors.grey, fontSize: 16))
+                  Text('Made by ${main.author}', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  Text('Powered by ${main.provider}', style: TextStyle(color: Colors.white, fontSize: 18)),
+                  Text('\nv${main.version}', style: TextStyle(color: Colors.grey, fontSize: 16))
                 ],
               ),
             )

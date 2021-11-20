@@ -51,7 +51,7 @@ class _WeekScreenState extends State<WeekScreen> {
   createStartPage() {
     var date = DateTime.now();
 
-    while(date.weekday == 6 || date.weekday == 7) { //current day is weekend
+    while(date.weekday == 6 || date.weekday == 7) { /// current day is weekend
       date = date.add(Duration(days: 1));
     }
 

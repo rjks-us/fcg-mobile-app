@@ -4,29 +4,50 @@ import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/device/device.dart' as device;
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/pages/event/event.dart';
 import 'package:fcg_app/pages/home.dart';
 import 'package:fcg_app/pages/settings/settings.dart';
 import 'package:fcg_app/pages/setup/app_setup.dart';
+import 'package:fcg_app/pages/splash/splashscreen.dart';
 import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
 import 'package:fcg_app/pages/tmp/week.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+///Global Variables
+
+bool splashScreen = false;
+
+String version = '1.0.0', author = 'Robert J. Kratz', provider = 'rjks.us';
+
+bool connection = false;
+bool apiOnline = false;
 bool dev = true;
 bool setUp = false;
 
-void main() async {
+initApp() async {
+  var request = await getVersion();
 
-  print(await getVersion());
+  if(request != null) {
+    var version = request['data'];
+
+    apiOnline = true;
+
+    author = version['author'];
+    version = version['version'];
+  } else {
+    var connected = await hasConnection(); ///Check if general a connection is possible, pinged google.com
+    if(connected) connection = true;
+  }
 
   if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
-    print('deb');
     setUp = true;
     if(!await device.isSessionValid()) device.refreshSession();
   }
+}
 
-  print('123');
+void main() async {
 
   runApp(App());
 }
@@ -42,7 +63,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: setUp ? Home() : SelectClass(userNav: true,),
+      home: SplashScreen(),
     );
   }
 }
@@ -91,8 +112,8 @@ class _MyHomePageState extends State<Home> {
           textAlign: TextAlign.center,
         ),
         BottomNavyBarItem(
-          icon: Icon(Icons.backpack),
-          title: Text("ToDo's"),
+          icon: Icon(Icons.article_outlined),
+          title: Text("Events"),
           activeColor: Colors.pink,
           inactiveColor: _inactiveColor,
           textAlign: TextAlign.center,
@@ -119,7 +140,7 @@ class _MyHomePageState extends State<Home> {
       ),
       Container(
         alignment: Alignment.center,
-        child: Text("ToDo's",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+        child: EventScreen(),
       ),
       Container(
         alignment: Alignment.center,

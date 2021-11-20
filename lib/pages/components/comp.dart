@@ -177,6 +177,50 @@ class _ClassPreLoadingBoxState extends State<ClassPreLoadingBox> {
   }
 }
 
+class EventPreLoadingBox extends StatefulWidget {
+  const EventPreLoadingBox({Key? key}) : super(key: key);
+
+  @override
+  _EventPreLoadingBoxState createState() => _EventPreLoadingBoxState();
+}
+
+class _EventPreLoadingBoxState extends State<EventPreLoadingBox> {
+  bool selected = false;
+
+  Color from = Color.fromRGBO(48, 48, 52, 0.5);
+  Color to = Color.fromRGBO(41, 40, 43, 0.5);
+
+  @override
+  void initState() {
+    super.initState();
+    Timer(Duration(seconds: 0), () {
+      setState(() {
+        selected = !selected;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      margin: EdgeInsets.only(bottom: 10, top: 10),
+      height: 120.0,
+      duration: Duration(seconds: 1, milliseconds: 5),
+      onEnd: () {
+        setState(() {
+          selected = !selected;
+        });
+      },
+      curve: Curves.ease,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(13.0),
+        color: selected ? from : to,
+      ),
+    );
+  }
+}
+
+
 void createSettingsModalBottomSheet(var context, Widget content) {
   showModalBottomSheet(context: context, builder: (context) {
     return Container(
