@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/device/device.dart' as device;
+import 'package:fcg_app/api/httpBuilder.dart' as httpBuilder;
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
 import 'package:fcg_app/storage/storage.dart';
@@ -26,6 +27,8 @@ class SelectClass extends StatefulWidget {
 class _SelectClassState extends State<SelectClass> {
 
   int classesFound = 0;
+  bool connection = false;
+
   List<Widget> classList = [
     ClassPreLoadingBox(),
     ClassPreLoadingBox(),
@@ -40,49 +43,65 @@ class _SelectClassState extends State<SelectClass> {
     ClassPreLoadingBox(),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    loadElements();
+  refresh() {
+    setState(() {});
   }
+  
+  onRefreshPress() async {
+    await load(true);
+  }
+  
+  load(bool newRequest) async {
+    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/classes', true, newRequest, !newRequest);
+    httpBuilder.Response response = await request.flush();
+    await response.checkCache();
 
-  loadElements() async {
-    log(5);
+    classList.clear();
+    
+    response.onSuccess((classes) {
+      classes!.forEach((element) {
+        Map<String, dynamic> obj = element;
+        String teacher = '-';
 
-    List<dynamic>? classes = await getClasses();
-    bool loaded = false;
-    log(3);
+        try {
+          teacher = obj['teachers'][0]; ///for this stupid AG class without a teacher
+        } catch (_) {}
 
-    if(classes == null) loaded = !loaded;
+        classList.add(ClassElement(className: obj['short'], teacher: teacher, id: obj['id'], userRedirect: widget.userNav,));
+        classesFound++;
+      });
+      connection = true;
+    });
+    
+    response.onNoResult((data) {
+      connection = false;
+      classList.add(NoInternetConnectionScreen(refresh: () {
+        onRefreshPress();
+      }));
+    });
+    
+    response.onError((data) {
+      connection = false;
+      classList.add(AnErrorOccurred(refresh: () {
+        onRefreshPress();
+      }));
+    });
 
-    Timer(Duration(seconds: 1), () {
-      try { /// <-- To many elements in queue
-        if(this.mounted) {
-          print('1');
-          setState(() {
-            classList.clear();
-            print('2');
+    await response.process();
 
-            classes!.forEach((element) {
-              Map<String, dynamic> obj = element;
-              String teacher = '-';
-
-              try {
-                teacher = obj['teachers'][0]; ///for this stupid AG class without a teacher
-              } catch (_) {}
-
-              classList.add(ClassElement(className: obj['short'], teacher: teacher, id: obj['id'], userRedirect: widget.userNav,));
-              classesFound++;
-            });
-
-          });
-        }
-      } catch(err) {
-        print(err); ///<-- Parsing error
+    Timer(Duration(milliseconds: 5), () {
+      if(this.mounted) {
+        refresh();
       }
     });
   }
 
+  @override
+  void initState() {
+    super.initState();
+    load(false);
+  }  
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,13 +137,15 @@ class _SelectClassState extends State<SelectClass> {
                     children: classList,
                   ),
                 ),
-                Container(
+                Visibility(
+                  visible: connection,
+                  child: Container(
                     width: MediaQuery.of(context).size.width,
                     margin: EdgeInsets.all(20.0),
                     child: Center(
                       child: Text('Insgesamt wurden ${classesFound} Klassen gefunden', style: TextStyle(color: Colors.grey, fontSize: 12),),
                     )
-                ),
+                )),
               ],
             ),
           )
@@ -275,7 +296,8 @@ class _SelectCourseState extends State<SelectCourse> {
 
   int coursesFound = 0;
   Color lastColor = Colors.red;
-
+  bool connected = false;
+  
   List<Color> colors = [Colors.blue, Colors.red, Colors.green, Colors.deepOrangeAccent];
 
   List<Widget> section = [
@@ -300,42 +322,67 @@ class _SelectCourseState extends State<SelectCourse> {
   goBack() {
     Navigator.pop(context);
   }
+
+  refresh() {
+    setState(() {});
+  }
+
+  onRefreshPress() async {
+    await load(true);
+  }
   
-  loadElements() async {
-    Map<String, dynamic>? classes = await getSubjectList(widget.id);
-    bool loaded = false;
+  load(bool newRequest) async {
 
-    if(classes == null) loaded = !loaded;
+    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/subjectsList/${widget.id}', true, newRequest, !newRequest);
+    httpBuilder.Response response = await request.flush();
+    await response.checkCache();
 
-    Timer(Duration(seconds: 1), () {
-      try { /// <-- To many elements in queue
-        if(this.mounted) {
-          setState(() {
-            section.clear();
+    section.clear();
 
-            classes!.forEach((key, value) {
-              String sectionName = key;
-              Color sectionColor = getRandomColor();
-              List<dynamic> courses = classes[sectionName];
+    response.onSuccess((classes) {
+      classes!.forEach((key, value) {
+        String sectionName = key;
+        Color sectionColor = getRandomColor();
+        List<dynamic> courses = classes[sectionName];
 
-              List<Widget> coursesCollection = [];
+        List<Widget> coursesCollection = [];
 
-              courses.forEach((element) {
-                Map<String, dynamic> courseElement = element, teacher = courseElement['teacher'];
-                String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
+        courses.forEach((element) {
+          Map<String, dynamic> courseElement = element, teacher = courseElement['teacher'];
+          String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
 
-                if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
-                if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
+          if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
+          if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
 
-                coursesCollection.add(CourseElement(id: courseElement['id'], name: '${courseElement['name']} (${courseElement['short']})', teacher: teacherName, color: sectionColor));
-              });
-              lastColor = sectionColor;
-              section.add(CourseSection(title: sectionName, color: Colors.green, courses: coursesCollection));
-            });
-          });
-        }
-      } catch(err) {
-        print(err); ///<-- Parsing error
+          coursesCollection.add(CourseElement(id: courseElement['id'], name: '${courseElement['name']} (${courseElement['short']})', teacher: teacherName, color: sectionColor));
+        });
+        lastColor = sectionColor;
+        section.add(CourseSection(title: sectionName, color: Colors.green, courses: coursesCollection));
+      });
+      connection = true;
+    });
+
+    response.onNoResult((data) {
+      connection = false;
+      coursesFound = 0;
+      section.add(NoInternetConnectionScreen(refresh: () {
+        onRefreshPress();
+      }));
+    });
+
+    response.onError((data) {
+      connection = false;
+      coursesFound = 0;
+      section.add(AnErrorOccurred(refresh: () {
+        onRefreshPress();
+      }));
+    });
+
+    await response.process();
+
+    Timer(Duration(milliseconds: 5), () {
+      if(this.mounted) {
+        refresh();
       }
     });
   }
@@ -367,7 +414,7 @@ class _SelectCourseState extends State<SelectCourse> {
   @override
   void initState() {
     super.initState();
-    loadElements();
+    load(false);
   }
 
   @override
@@ -439,11 +486,16 @@ class _SelectCourseState extends State<SelectCourse> {
                   ),
                 ),
                 Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text('Insgesamt wurden ${section.length} Kurse gefunden', style: TextStyle(color: Colors.grey, fontSize: 12),),
-                    )
+                  child: Visibility(
+                    visible: connected,
+                    child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        margin: EdgeInsets.all(20.0),
+                        child: Center(
+                          child: Text('Insgesamt wurden ${section.length} Kurse gefunden', style: TextStyle(color: Colors.grey, fontSize: 12),),
+                        )
+                    ),
+                  ),
                 ),
               ],
             ),

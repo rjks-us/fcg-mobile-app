@@ -27,19 +27,19 @@ bool dev = true;
 bool setUp = false;
 
 initApp() async {
-  var request = await getVersion();
-
-  if(request != null) {
-    var version = request['data'];
-
-    apiOnline = true;
-
-    author = version['author'];
-    version = version['version'];
-  } else {
-    var connected = await hasConnection(); ///Check if general a connection is possible, pinged google.com
-    if(connected) connection = true;
-  }
+  // var request = await getVersion();
+  //
+  // if(request != null) {
+  //   var version = request['data'];
+  //
+  //   apiOnline = true;
+  //
+  //   author = version['author'];
+  //   version = version['version'];
+  // } else {
+  //   var connected = await hasConnection(); ///Check if general a connection is possible, pinged google.com
+  //   if(connected) connection = true;
+  // }
 
   if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
     setUp = true;

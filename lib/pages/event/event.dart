@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:fcg_app/api/helper.dart';
+import 'package:fcg_app/api/httpBuilder.dart' as httpBuilder;
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 
 class EventScreen extends StatefulWidget {
   const EventScreen({Key? key}) : super(key: key);
@@ -30,108 +32,43 @@ class _EventScreenState extends State<EventScreen> {
     setState(() {});
   }
 
-  load() async {
-    Map<String, dynamic>? result = await getToday();
-    Timer(Duration(seconds: 2), () {
-      try {
-        if(this.mounted) {
-          setState(() {
-            events.clear();
+  onRefreshPress() async {
+    await load(true);
+  }
 
-            print(result);
+  load(bool newRequest) async {
+    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/today', true, newRequest, !newRequest);
+    httpBuilder.Response response = await request.flush();
+    await response.checkCache();
 
-            if(result == null) { ///No Internet connection
-              events.add(Container(
-                child: Container(
-                    margin: EdgeInsets.all(20),
-                    child: Column(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(bottom: 15.0),
-                          child: Center(
-                            child: Icon(Icons.wifi_off, size: 40, color: Colors.grey,),
-                          ),
-                        ),
-                        Container(
-                          child: Center(
-                            child: Text(
-                              'Es besteht keine Verbindung\nzum Internet',
-                              style: TextStyle(color: Colors.grey, fontSize: 18),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      ],
-                    )
-                ),
-              ));
-              refresh();
-              return;
-            }
+    events.clear();
 
-            Map<String, dynamic>? data = result['data'];
-            if(data == null) {
-              events.add(Container(
-                child: Container(
-                    margin: EdgeInsets.all(20),
-                    child: Column(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(bottom: 15.0),
-                          child: Center(
-                            child: Icon(Icons.block_outlined, size: 40, color: Colors.grey,),
-                          ),
-                        ),
-                        Container(
-                          child: Center(
-                            child: Text(
-                              'Es wurden keine Nachrichten\ngefunden',
-                              style: TextStyle(
-                                  color: Colors.grey, fontSize: 18),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      ],
-                    )
-                ),
-              ));
-              refresh();
-              return;
-            }
-            List<dynamic>? messages = data['messages'];
-            if( messages == null || messages.length == 0) {
-              events.add(Container(
-                child: Container(
-                    margin: EdgeInsets.all(20),
-                    child: Column(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(bottom: 15.0),
-                          child: Center(
-                            child: Icon(Icons.block_outlined, size: 40, color: Colors.grey,),
-                          ),
-                        ),
-                        Container(
-                          child: Center(
-                            child: Text(
-                              'Es wurden keine Nachrichten\ngefunden',
-                              style: TextStyle(color: Colors.grey, fontSize: 18),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      ],
-                    )
-                ),
-              ));
-              refresh();
-              return;
-            }
-          });
-        }
-      } catch(_) {
-        print(_);
+    response.onSuccess((data) { ///200
+      List<dynamic>? messages = data['messages'];
+      if(messages == null || messages.length == 0) { ///Check if messages do exists
+        events.add(NoResultFoundScreen(error: 'Es wurde kein Ergebnis\ngefunden', refresh: () {
+          onRefreshPress();
+        }));
+      }
+    });
+
+    response.onNoResult((data) { ///No connection
+      events.add(NoInternetConnectionScreen(refresh: () {
+        onRefreshPress();
+      }));
+    });
+
+    response.onError((data) { ///Server Error
+      events.add(AnErrorOccurred(refresh: () {
+        onRefreshPress();
+      }));
+    });
+
+    await response.process();
+
+    Timer(Duration(milliseconds: 5), () {
+      if(this.mounted) {
+        refresh();
       }
     });
   }
@@ -139,7 +76,7 @@ class _EventScreenState extends State<EventScreen> {
   @override
   void initState() {
     super.initState();
-    load();
+    load(false);
   }
 
   @override
@@ -177,16 +114,16 @@ class _EventScreenState extends State<EventScreen> {
                             ),
                           ),
                         ),
-                        // Container(
-                        //     alignment: Alignment.centerRight,
-                        //     child: IconButton(
-                        //       icon: Icon(
-                        //         Icons.settings,
-                        //         color: Colors.white,
-                        //       ),
-                        //       onPressed: () => {}, ///TODO: Settings for events
-                        //     )
-                        // )
+                        Container(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.settings,
+                                color: Colors.white,
+                              ),
+                              onPressed: () => onRefreshPress(), ///TODO: Settings for events
+                            )
+                        )
                       ],
                     )
                 ),

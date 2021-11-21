@@ -220,6 +220,128 @@ class _EventPreLoadingBoxState extends State<EventPreLoadingBox> {
   }
 }
 
+class NoInternetConnectionScreen extends StatefulWidget {
+  const NoInternetConnectionScreen({Key? key, required this.refresh}) : super(key: key);
+
+  final VoidCallback refresh;
+
+  @override
+  _NoInternetConnectionScreenState createState() => _NoInternetConnectionScreenState();
+}
+
+class _NoInternetConnectionScreenState extends State<NoInternetConnectionScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: GestureDetector(
+        onTap: () => widget.refresh(),
+        child: Column(
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(bottom: 15.0),
+              child: Center(
+                child: Icon(Icons.wifi_off, size: 40, color: Colors.grey,),
+              ),
+            ),
+            Container(
+              child: Center(
+                child: Text(
+                  'Es besteht keine Verbindung\nzum Internet',
+                  style: TextStyle(color: Colors.grey, fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
+      )
+    );
+  }
+}
+
+class NoResultFoundScreen extends StatefulWidget {
+  const NoResultFoundScreen({Key? key, required this.refresh, required this.error}) : super(key: key);
+
+  final VoidCallback refresh;
+  final String error;
+  
+  @override
+  _NoResultFoundScreenState createState() => _NoResultFoundScreenState();
+}
+
+class _NoResultFoundScreenState extends State<NoResultFoundScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin: EdgeInsets.all(20),
+        child: GestureDetector(
+          onTap: () => widget.refresh(),
+          child: Column(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(bottom: 15.0),
+                child: Center(
+                  child: Icon(Icons.wifi_off, size: 40, color: Colors.grey,),
+                ),
+              ),
+              Container(
+                child: Center(
+                  child: Text(
+                    widget.error,
+                    style: TextStyle(color: Colors.grey, fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
+    );
+  }
+}
+
+class AnErrorOccurred extends StatefulWidget {
+  const AnErrorOccurred({Key? key, required this.refresh}) : super(key: key);
+
+  final VoidCallback refresh;
+
+  @override
+  _AnErrorOccurredState createState() => _AnErrorOccurredState();
+}
+
+class _AnErrorOccurredState extends State<AnErrorOccurred> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin: EdgeInsets.all(20),
+        child: GestureDetector(
+          onTap: () => widget.refresh(),
+          child: Column(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.only(bottom: 15.0),
+                child: Center(
+                  child: Icon(
+                    Icons.block_outlined, size: 40, color: Colors.grey,),
+                ),
+              ),
+              Container(
+                child: Center(
+                  child: Text(
+                    'Ein Fehler ist aufgetreten,\nbitte versuche es später erneut',
+                    style: TextStyle(color: Colors.grey, fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            ],
+          ),
+        )
+    );
+  }
+}
+
 
 void createSettingsModalBottomSheet(var context, Widget content) {
   showModalBottomSheet(context: context, builder: (context) {
