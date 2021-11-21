@@ -47,7 +47,13 @@ register() async {
 
   request.headers.addAll(await getHeader());
 
-  http.StreamedResponse response = await request.send();
+  http.StreamedResponse response;
+
+  try {
+    response = await request.send();
+  } catch(_) {
+    return throw Error();
+  }
 
   if (response.statusCode == 200) {
     Map<String, dynamic> body = new Map<String, dynamic>();

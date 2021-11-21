@@ -41,6 +41,7 @@ initApp() async {
   //   if(connected) connection = true;
   // }
 
+
   if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
     setUp = true;
     if(!await device.isSessionValid()) device.refreshSession();

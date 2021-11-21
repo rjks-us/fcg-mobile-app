@@ -7,6 +7,7 @@ import 'package:fcg_app/device/device.dart' as device;
 import 'package:fcg_app/api/httpBuilder.dart' as httpBuilder;
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/pages/components/loader.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -787,16 +788,9 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
   }
 
   finish() async {
-    if(!await device.deviceRegistered()) {
-      await device.register();
-    } else {
-      print('Current device is already registered');
-      if(!await device.isSessionValid()) device.refreshSession();
-    }
-
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => Home()),
+      MaterialPageRoute(builder: (context) => APIWaitUntilSyncScreen()),
           (Route<dynamic> route) => false,
     );
   }
@@ -913,5 +907,87 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
   }
 }
 
+class APIWaitUntilSyncScreen extends StatefulWidget {
+  const APIWaitUntilSyncScreen({Key? key}) : super(key: key);
 
+  @override
+  _APIWaitUntilSyncScreenState createState() => _APIWaitUntilSyncScreenState();
+}
 
+class _APIWaitUntilSyncScreenState extends State<APIWaitUntilSyncScreen> {
+
+  bool created = true;
+  String status = 'Wir optimieren deinen Stundenplan...';
+
+  refresh() {
+    setState(() {});
+  }
+
+  load() async {
+    try {
+      if(!await device.deviceRegistered()) {
+        await device.register();
+
+        Timer(Duration(seconds: 1), () {
+          if(this.mounted && created) {
+            status = 'Fertig!';
+            refresh();
+          }
+        });
+
+      } else {
+        print('Current device is already registered');
+        if(!await device.isSessionValid()) device.refreshSession();
+      }
+    } catch(_) {
+      created = false;
+      status = 'Es ist ein Fehler aufgetreten,\nbitte versuche es später erneut';
+      refresh();
+    }
+
+    Timer(Duration(seconds: 3), () {
+      if(this.mounted && created) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => Home()),
+              (Route<dynamic> route) => false,
+        );
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(54, 66, 106, 1),
+                Color.fromRGBO(29, 29, 29, 1)
+              ]
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ColorLoader(),
+            Container(
+              margin: EdgeInsets.only(top: 30, left: 20, right: 20),
+              child: Text(status, textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18),),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
