@@ -87,6 +87,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
           ),
         ),
         child: SingleChildScrollView(
+          controller: ScrollController(),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
@@ -123,6 +124,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
                               Container(
                                 width: MediaQuery.of(context).size.width,
                                 child: SingleChildScrollView(
+                                  controller: ScrollController(),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: <Widget>[
@@ -232,6 +234,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
                       createSettingsModalBottomSheet(context, Container(
                         width: MediaQuery.of(context).size.width,
                         child: SingleChildScrollView(
+                          controller: ScrollController(),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: <Widget>[

@@ -160,11 +160,126 @@ class _MyHomePageState extends State<Home> {
 * Timetable element
 * */
 
+class TimeTableFreeElement extends StatefulWidget {
+  const TimeTableFreeElement({Key? key, required this.hour, required this.time}) : super(key: key);
+
+  final String hour, time;
+
+  @override
+  _TimeTableFreeElementState createState() => _TimeTableFreeElementState();
+}
+
+class _TimeTableFreeElementState extends State<TimeTableFreeElement> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(left: 20.0, right: 20.0),
+      child: Column(children: <Widget>[
+        Line(title: widget.time),
+        InkWell(
+          child: TimeTableFreeElementBox(hour: widget.hour),
+          onTap: () => {},
+        )
+      ]),
+    );
+  }
+}
+
+
+class TimeTableFreeElementBox extends StatefulWidget {
+  const TimeTableFreeElementBox({Key? key, required this.hour}) : super(key: key);
+
+  final String hour;
+
+  @override
+  _TimeTableFreeElementBoxState createState() => _TimeTableFreeElementBoxState();
+}
+
+class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: 100.0,
+      decoration: BoxDecoration(
+          boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
+          borderRadius: BorderRadius.circular(13.0),
+          color: Color.fromRGBO(255, 255, 255, 0.13),
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(43, 42, 47, 1),
+                Color.fromRGBO(41, 40, 43, 1.0),
+              ]
+          )
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Container(
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 80,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(15),
+                        bottomLeft: Radius.circular(15)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.hour,
+                      style: TextStyle(fontSize: 40.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+                    ),
+                  ),
+                ),
+                Container(
+                    height: 100,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          width: 180,
+                          child: Text(
+                            'Freistunde',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                          ),
+                        ),
+                      ],
+                    )
+                ),
+              ],
+            ),
+          ),
+          Container(
+            alignment: Alignment.centerRight,
+            width: 20,
+            height: 100,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(15),
+                    bottomRight: Radius.circular(15)),
+                color: Colors.indigo
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 class TimetableElement extends StatefulWidget {
-  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status}) : super(key: key);
+  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status,required this.data}) : super(key: key);
 
   //final Map<String, dynamic> timetableObjects;
 
+  final Map<String, dynamic> data;
   final int status;
   final String time, hour, title, subtitle;
 
@@ -176,15 +291,12 @@ class _TimetableElementState extends State<TimetableElement> {
 
   getColor(int state) {
     if(state == 0) {
-      print('a');
       return Colors.green;
     }
     if(state == 1) {
-      print('b');
       return Colors.red;
     }
     if(state == 2) {
-      print('c');
       return Colors.yellow;
     }
   }
@@ -197,7 +309,7 @@ class _TimetableElementState extends State<TimetableElement> {
         Line(title: widget.time),
         InkWell(
           child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: getColor(widget.status)),
-          onTap: () => {showTimeTable(context, {"id": "1", "message": "eigenverantwortliches Arbeitens", "status": "${widget.status}"})},
+          onTap: () => {showTimeTable(context, {"data": widget.data})},
         )
       ]),
     );

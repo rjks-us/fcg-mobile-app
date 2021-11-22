@@ -397,7 +397,7 @@ class _SelectCourseState extends State<SelectCourse> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => Home()),
+        MaterialPageRoute(builder: (context) => APIWaitUntilSyncScreen(createNewDevice: false)),
             (Route<dynamic> route) => false,
       );
 
@@ -415,6 +415,8 @@ class _SelectCourseState extends State<SelectCourse> {
   @override
   void initState() {
     super.initState();
+    tmpSelectedCourse.clear();
+    courses.clear();
     load(false);
   }
 
@@ -537,7 +539,7 @@ class _CourseSectionState extends State<CourseSection> {
 }
 
 List<int> courses = []; ///<-- Course cache when seleced
-List<Widget> tmp_selected_couses = [];
+List<Widget> tmpSelectedCourse = [];
 
 class CourseElement extends StatefulWidget {
   const CourseElement({Key? key, required this.id, required this.name, required this.teacher, required this.color}) : super(key: key);
@@ -549,11 +551,11 @@ class CourseElement extends StatefulWidget {
   toggleCourse() {
     if(courses.contains(id)) {
       courses.remove(id);
-      tmp_selected_couses.remove(this);
+      tmpSelectedCourse.remove(this);
       print('Unselected course $name with id $id');
     } else {
       courses.add(id);
-      tmp_selected_couses.add(this);
+      tmpSelectedCourse.add(this);
       print('Selected course $name with id $id');
     }
   }
@@ -790,7 +792,7 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
   finish() async {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => APIWaitUntilSyncScreen()),
+      MaterialPageRoute(builder: (context) => APIWaitUntilSyncScreen(createNewDevice: true,)),
           (Route<dynamic> route) => false,
     );
   }
@@ -888,7 +890,7 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
                   onTap: () => {},
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
-                    children: tmp_selected_couses,
+                    children: tmpSelectedCourse,
                   ),
                 )
               ),
@@ -896,7 +898,7 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
                 width: MediaQuery.of(context).size.width,
                 margin: EdgeInsets.all(20.0),
                 child: Center(
-                  child: Text('Du bist in ${tmp_selected_couses.length} Kursen', style: TextStyle(color: Colors.grey, fontSize: 12),),
+                  child: Text('Du bist in ${tmpSelectedCourse.length} Kursen', style: TextStyle(color: Colors.grey, fontSize: 12),),
                 ),
               ),
             ],
@@ -908,7 +910,9 @@ class _FinishSetupScreenState extends State<FinishSetupScreen> {
 }
 
 class APIWaitUntilSyncScreen extends StatefulWidget {
-  const APIWaitUntilSyncScreen({Key? key}) : super(key: key);
+  const APIWaitUntilSyncScreen({Key? key, required this.createNewDevice}) : super(key: key);
+
+  final bool createNewDevice;
 
   @override
   _APIWaitUntilSyncScreenState createState() => _APIWaitUntilSyncScreenState();

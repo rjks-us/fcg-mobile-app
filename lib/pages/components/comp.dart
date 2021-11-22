@@ -282,7 +282,7 @@ class _NoResultFoundScreenState extends State<NoResultFoundScreen> {
               Container(
                 margin: EdgeInsets.only(bottom: 15.0),
                 child: Center(
-                  child: Icon(Icons.wifi_off, size: 40, color: Colors.grey,),
+                  child: Icon(Icons.block, size: 40, color: Colors.grey,),
                 ),
               ),
               Container(

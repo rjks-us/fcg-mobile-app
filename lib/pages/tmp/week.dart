@@ -145,12 +145,12 @@ class _WeekPageState extends State<WeekPage> {
 
   ///temporary list to simulate loading animation
   List<Widget> tmpElements = [
-    TimetableElement(time: '8:30', hour: '1.', title: 'Biologie GK-2', subtitle: 'Ch1 - Eike Lückerath', status: 0),
-    TimetableElement(time: '9:15', hour: '2.', title: 'Religion GK-4', subtitle: 'K6 - Veit Reiß', status: 1),
-    TimetableElement(time: '10:20', hour: '3.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2),
-    TimetableElement(time: '11:05', hour: '4.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2),
-    TimetableElement(time: '12:50', hour: '5.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0),
-    TimetableElement(time: '13:25', hour: '6.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0,),
+    TimetableElement(time: '8:30', hour: '1.', title: 'Biologie GK-2', subtitle: 'Ch1 - Eike Lückerath', status: 0, data: {},),
+    TimetableElement(time: '9:15', hour: '2.', title: 'Religion GK-4', subtitle: 'K6 - Veit Reiß', status: 1, data: {},),
+    TimetableElement(time: '10:20', hour: '3.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2, data: {},),
+    TimetableElement(time: '11:05', hour: '4.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2, data: {},),
+    TimetableElement(time: '12:50', hour: '5.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0, data: {},),
+    TimetableElement(time: '13:25', hour: '6.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0, data: {},),
   ];
 
   List<Widget> classElements = [
@@ -190,6 +190,7 @@ class _WeekPageState extends State<WeekPage> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: ScrollController(),
       child: Container(
           height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
@@ -203,6 +204,7 @@ class _WeekPageState extends State<WeekPage> {
               )
           ),
           child: new SingleChildScrollView(
+            controller: ScrollController(),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[

@@ -58,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if(this.mounted) {
           setState(() {
             currentDay.clear();
-
             if(timetable == null || timetable.length == 0) {
               if(lastRefresh.weekday == 6 || lastRefresh.weekday == 7) {
                 currentDay.add(Container(
@@ -111,13 +110,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ));
               }
-
               refresh();
               return;
             }
 
-            timetable.forEach((element) {
-              var subject = element['subject'], start = element['start'], end = element['end'], teacher = element['teacher'];
+            List<int> hours = [0];
+
+            timetable.forEach((element) async {
+              var subject = element['subject'], start = element['start'], end = element['end'], teacher = element['teacher'], status = element['status'];
+
+              int classStatus = 0;
 
               String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
 
@@ -125,7 +127,38 @@ class _HomeScreenState extends State<HomeScreen> {
               if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
 
               if(selectedCourses.contains(subject['id'])) {
-                currentDay.add(TimetableElement(status: 0, hour: '1.', time: '${start['hour']}:${start['minute']}', title: subject['name'], subtitle: teacherName));
+                var block = getBlockNumberFromTime('${start['hour']}:${start['minute']}');
+                var lastItem = hours[hours.length - 1];
+
+                if(hours[hours.length - 1] + 1 != block) {
+                  print('1 ${hours[hours.length - 1]}');
+                  print('2 $block');
+                  for(int i = lastItem + 1; i < block; i++) {
+                    currentDay.add(TimeTableFreeElement(hour: '$i.', time: getTimeFromBlockNumber(i),));
+                  }
+                }
+                bool visible = true;
+
+                if(status['type'] == 'CLASS') {
+                  classStatus = 0;
+                } else if(status['type'] == 'CANCELED') {
+                  classStatus = 1;
+                } else if(status['type'] == 'INFO') {
+                  classStatus = 2;
+                  visible = false;
+                }
+
+                if(visible) {
+                  hours.add(block);
+                  currentDay.add(TimetableElement(
+                    status: classStatus,
+                    hour: '$block.',
+                    time: '${start['hour']}:${start['minute']}',
+                    title: subject['name'],
+                    subtitle: teacherName,
+                    data: element,
+                  ));
+                }
               }
             });
             lastRefresh = DateTime.now();
@@ -161,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: ScrollController(),
       child: VisibilityDetector(
         key: Key('week-home-dec-${randomKey()}'), /// <-- idk why this is needed, to not touch
         onVisibilityChanged: (info) {
@@ -179,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
               )
           ),
           child: new SingleChildScrollView(
+            controller: ScrollController(),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
