@@ -138,8 +138,63 @@ String getTimeFromBlockNumber(int block) {
   }
 }
 
-int getBlockNumberFromTime(String time) {
+///getTimeFromBlockNumber(i).split(':')[0]
 
+DateTime getDateTimeFromBlockNumber(int block, DateTime dateTime) {
+
+  int hour = 0, minute = 0;
+
+  switch(block) {
+    case 1:
+      hour = 8;
+      minute = 30;
+      break;
+    case 2:
+      hour = 9;
+      minute = 15;
+      break;
+    case 3:
+      hour = 10;
+      minute = 20;
+      break;
+    case 4:
+      hour = 11;
+      minute = 5;
+      break;
+    case 5:
+      hour = 12;
+      minute = 50;
+      break;
+    case 6:
+      hour = 13;
+      minute = 35;
+      break;
+    case 7:
+      hour = 14;
+      minute = 30;
+      break;
+    case 8:
+      hour = 15;
+      minute = 15;
+      break;
+    case 9:
+      hour = 16;
+      minute = 10;
+      break;
+    case 10:
+      hour = 16;
+      minute = 55;
+      break;
+    default:
+      hour = 1;
+      minute = 0;
+      break;
+  }
+
+  return new DateTime(dateTime.year, dateTime.month, dateTime.day, hour, minute);
+}
+
+int getBlockNumberFromTime(String time) {
   String timeFormat = time.replaceAll(':', '');
 
   switch(timeFormat) {

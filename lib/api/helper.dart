@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
-// var host = 'https://api.fcg-app.de';
-var host = 'http://localhost:8080';
+var host = 'https://api.fcg-app.de';
+// var host = 'http://localhost:8080';
 
 Future<Map<String, dynamic>> getClasses() async {
   var respond;

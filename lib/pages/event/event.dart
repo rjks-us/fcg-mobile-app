@@ -29,7 +29,7 @@ class _EventScreenState extends State<EventScreen> {
   DateTime date = DateTime.now();
 
   refresh() {
-    setState(() {});
+    if(this.mounted) setState(() {});
   }
 
   onRefreshPress() async {

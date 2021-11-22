@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:fcg_app/api/helper.dart';
+import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import 'package:fcg_app/api/httpBuilder.dart' as httpBuilder;
 import '../../modal/modal_bottom_sheet.dart';
 
 class WeekScreen extends StatefulWidget {
@@ -94,36 +97,48 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: PageView(
-          controller: pageController,
-          onPageChanged: (page) {
-            //FloatingActionButton only shown if not on page 0
-            if(page > 0) {
-              showActionButton = true;
-              refresh();
-            } else if(page == 0) {
-              showActionButton = false;
-              refresh();
-            }
+      extendBody: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndTop,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Container(
+          child: PageView(
+            controller: pageController,
+            onPageChanged: (page) {
+              print(page);
+              //FloatingActionButton only shown if not on page 0
+              if(page > 0) {
+                print('a');
+                showActionButton = true;
+                refresh();
+              } else if(page == 0) {
+                print('b');
+                showActionButton = false;
+                refresh();
+              }
 
-            //Dynamically add next page if last page is shown
-            if((page) == lastIndexCreated) {
-              lastIndexCreated = page;
-              return createPageDayAfter();
-            }
-          },
-          pageSnapping: true,
-          children: _pages,
+              //Dynamically add next page if last page is shown
+              if((page) == lastIndexCreated) {
+                print('c');
+                lastIndexCreated = page;
+                return createPageDayAfter();
+              }
+            },
+            pageSnapping: true,
+            children: _pages,
+          ),
         ),
       ),
       floatingActionButton: Visibility(
         visible: showActionButton,
-        child: FloatingActionButton(
-          onPressed: () => {goToPage(0)},
-          tooltip: 'Zurück zu heute',
-          child: Icon(Icons.arrow_back, color: Colors.white,),
-        ),
+        child: Container(
+          margin: EdgeInsets.all(20),
+          child: FloatingActionButton(
+            onPressed: () => {goToPage(0)},
+            tooltip: 'Zurück zu heute',
+            child: Icon(Icons.arrow_back, color: Colors.white,),
+          ),
+        )
       )
     );
   }
@@ -140,51 +155,166 @@ class WeekPage extends StatefulWidget {
 
 class _WeekPageState extends State<WeekPage> {
 
+  DateTime lastRefresh = DateTime.now();
+  int classId = 0;
+  List<int> selectedCourses = [];
+
   List<String> days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
   List<String> month = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
-  ///temporary list to simulate loading animation
-  List<Widget> tmpElements = [
-    TimetableElement(time: '8:30', hour: '1.', title: 'Biologie GK-2', subtitle: 'Ch1 - Eike Lückerath', status: 0, data: {},),
-    TimetableElement(time: '9:15', hour: '2.', title: 'Religion GK-4', subtitle: 'K6 - Veit Reiß', status: 1, data: {},),
-    TimetableElement(time: '10:20', hour: '3.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2, data: {},),
-    TimetableElement(time: '11:05', hour: '4.', title: 'Mathematik GK-3', subtitle: 'K8 - Liv Marqiass', status: 2, data: {},),
-    TimetableElement(time: '12:50', hour: '5.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0, data: {},),
-    TimetableElement(time: '13:25', hour: '6.', title: 'Sport GK-1', subtitle: 'SCH - Liv Marqiass', status: 0, data: {},),
-  ];
+  List<Widget> currentDay = [],
+      tmpDay = [
+        TimeTablePreLoadingBox(time: '8:30'),
+        TimeTablePreLoadingBox(time: '9:15'),
+        TimeTablePreLoadingBox(time: '10:20'),
+        TimeTablePreLoadingBox(time: '11:05'),
+        TimeTablePreLoadingBox(time: '11:50'),
+        TimeTablePreLoadingBox(time: '12:50'),
+        TimeTablePreLoadingBox(time: '13:25'),
+        TimeTablePreLoadingBox(time: '14:30'),
+        TimeTablePreLoadingBox(time: '15:15'),
+        TimeTablePreLoadingBox(time: '16:05'),
+        TimeTablePreLoadingBox(time: '16:55'),
+      ];
 
-  List<Widget> classElements = [
-    TimeTablePreLoadingBox(time: '8:30'),
-    TimeTablePreLoadingBox(time: '9:15'),
-    TimeTablePreLoadingBox(time: '10:20'),
-    TimeTablePreLoadingBox(time: '11:05'),
-    TimeTablePreLoadingBox(time: '11:50'),
-    TimeTablePreLoadingBox(time: '12:50'),
-    TimeTablePreLoadingBox(time: '13:25'),
-  ];
+  refresh() {
+    if(this.mounted) setState(() {});
+  }
+
+  onRefreshPress() async {
+    await load(true);
+  }
+
+  load(bool newRequest) async {
+
+    ///Show loading boxes
+    currentDay.clear();
+    currentDay.addAll(tmpDay);
+
+    refresh();
+
+    ///Loading local variables
+    classId = await getInt('var-class-id');
+    selectedCourses = await getIntList('var-courses');
+
+    ///Check if it is weekend
+    if(lastRefresh.weekday == 6 || lastRefresh.weekday == 7) {
+      currentDay.add(Container(
+        child: Container(
+            margin: EdgeInsets.all(20),
+            child: Column(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.only(bottom: 15.0),
+                  child: Center(
+                    child: Icon(Icons.weekend, size: 40, color: Colors.grey,),
+                  ),
+                ),
+                Container(
+                  child: Center(
+                    child: Text(
+                      'Heute ist Wochenende,\n du hast keine Schule',
+                      style: TextStyle(color: Colors.grey, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+              ],
+            )
+        ),
+      ));
+      if(this.mounted) refresh();
+      return;
+    }
+
+    ///Request
+    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/timetable/$classId/${widget.date.year}/${widget.date.month}/${widget.date.day}', true, newRequest, !newRequest);
+    httpBuilder.Response response = await request.flush();
+    await response.checkCache();
+
+    currentDay.clear();
+
+    response.onSuccess((timetable) {
+
+      List<int> hours = [0];
+
+      timetable.forEach((element) async {
+        var subject = element['subject'], start = element['start'], end = element['end'], teacher = element['teacher'], status = element['status'];
+
+        int classStatus = 0;
+
+        String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
+
+        if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
+        if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
+
+        if(selectedCourses.contains(subject['id'])) {
+          var block = getBlockNumberFromTime('${start['hour']}:${start['minute']}');
+          var lastItem = hours[hours.length - 1];
+
+          if(hours[hours.length - 1] + 1 != block) {
+            int lastBlock = 0;
+            for(int i = lastItem + 1; i < block; i++) {
+              lastBlock = i;
+              currentDay.add(TimeTableFreeElement(hour: '$i.', time: getTimeFromBlockNumber(i), isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, widget.date)))));
+            }
+            hours.add(lastBlock);
+          }
+          bool visible = true;
+
+          if(status['type'] == 'CLASS') {
+            classStatus = 0;
+          } else if(status['type'] == 'CANCELED') {
+            classStatus = 1;
+          } else if(status['type'] == 'INFO') {
+            classStatus = 2;
+            visible = false;
+          }
+
+          if(visible) {
+            hours.add(block);
+            currentDay.add(TimetableElement(
+              status: classStatus,
+              hour: '$block.',
+              time: '${start['hour']}:${start['minute']}',
+              title: subject['name'],
+              subtitle: teacherName,
+              data: element,
+              isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, widget.date)))
+            ));
+          }
+        }
+      });
+      lastRefresh = DateTime.now();
+    });
+
+    response.onNoResult((data) { ///No connection
+      currentDay.add(NoInternetConnectionScreen(refresh: () {
+        onRefreshPress();
+      }));
+      if(this.mounted) refresh();
+    });
+
+    response.onError((data) { ///Server Error
+      currentDay.add(AnErrorOccurred(refresh: () {
+        onRefreshPress();
+      }));
+      if(this.mounted) refresh();
+    });
+
+    await response.process();
+
+    Timer(Duration(milliseconds: 5), () {
+      if(this.mounted) {
+        refresh();
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    loadElements();
-  }
-
-  loadElements() async {
-    Timer(Duration(seconds: 2), () {
-      try { /// <-- To many elements in queue
-        if(this.mounted) {
-          setState(() {
-            classElements.clear();
-
-            tmpElements.forEach((element) {
-              classElements.add(element);
-            });
-          });
-        }
-      } catch(err) {
-        print(err); ///<-- This error should definitely not occur ~ rk
-      }
-    });
+    load(false);
   }
 
   @override
@@ -228,7 +358,7 @@ class _WeekPageState extends State<WeekPage> {
                 ),
                 Container(
                   child: Column(
-                    children: classElements,
+                    children: currentDay,
                   ),
                 ),
                 Container(

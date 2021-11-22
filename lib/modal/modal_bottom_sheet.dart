@@ -47,7 +47,7 @@ void showTimeTable(var context, Map<String, dynamic> paramObject) {
       width: MediaQuery.of(context).size.width,
       child: Center(
         child: Text(
-          'Unterricht nach plan',
+          'Unterricht nach Plan',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -59,7 +59,7 @@ void showTimeTable(var context, Map<String, dynamic> paramObject) {
       width: MediaQuery.of(context).size.width,
       child: Center(
         child: Text(
-          'Entfällt heute',
+          'Entfällt Heute',
           style: TextStyle(color: Colors.white),
         ),
       ),

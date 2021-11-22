@@ -14,6 +14,7 @@ import 'package:fcg_app/pages/tmp/week.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 ///Global Variables
 
@@ -26,7 +27,7 @@ bool apiOnline = false;
 bool dev = true;
 bool setUp = false;
 
-initApp() async {
+initApp(Function(bool) callback) async {
   // var request = await getVersion();
   //
   // if(request != null) {
@@ -41,15 +42,19 @@ initApp() async {
   //   if(connected) connection = true;
   // }
 
+  try {
 
-  if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
-    setUp = true;
-    if(!await device.isSessionValid()) device.refreshSession();
+    if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
+      setUp = true;
+      if(!await device.isSessionValid()) device.refreshSession();
+      callback(true);
+    }
+  } catch(_) {
+    callback(false);
   }
 }
 
 void main() async {
-
   runApp(App());
 }
 
@@ -83,6 +88,8 @@ class _MyHomePageState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
+      resizeToAvoidBottomInset: true,
       bottomNavigationBar: _navigationBar(),
       body: getBody()
     );
@@ -161,8 +168,9 @@ class _MyHomePageState extends State<Home> {
 * */
 
 class TimeTableFreeElement extends StatefulWidget {
-  const TimeTableFreeElement({Key? key, required this.hour, required this.time}) : super(key: key);
+  const TimeTableFreeElement({Key? key, required this.hour, required this.time, required this.isOver}) : super(key: key);
 
+  final bool isOver;
   final String hour, time;
 
   @override
@@ -173,14 +181,19 @@ class _TimeTableFreeElementState extends State<TimeTableFreeElement> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 20.0),
-      child: Column(children: <Widget>[
-        Line(title: widget.time),
-        InkWell(
-          child: TimeTableFreeElementBox(hour: widget.hour),
-          onTap: () => {},
-        )
-      ]),
+      child: Opacity(
+        opacity: widget.isOver ? 0.6 : 1,
+        child: Container(
+          margin: EdgeInsets.only(left: 20.0, right: 20.0),
+          child: Column(children: <Widget>[
+            Line(title: widget.time),
+            InkWell(
+              child: TimeTableFreeElementBox(hour: widget.hour),
+              onTap: () => {},
+            )
+          ]),
+        ),
+      ),
     );
   }
 }
@@ -275,10 +288,11 @@ class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
 
 
 class TimetableElement extends StatefulWidget {
-  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status,required this.data}) : super(key: key);
+  const TimetableElement({Key? key, required this.time, required this.hour, required this.title, required this.subtitle, required this.status,required this.data, required this.isOver}) : super(key: key);
 
   //final Map<String, dynamic> timetableObjects;
 
+  final bool isOver;
   final Map<String, dynamic> data;
   final int status;
   final String time, hour, title, subtitle;
@@ -304,14 +318,19 @@ class _TimetableElementState extends State<TimetableElement> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(left: 20.0, right: 20.0),
-      child: Column(children: <Widget>[
-        Line(title: widget.time),
-        InkWell(
-          child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: getColor(widget.status)),
-          onTap: () => {showTimeTable(context, {"data": widget.data})},
-        )
-      ]),
+      child: Opacity(
+        opacity: widget.isOver ? 0.6 : 1,
+        child: Container(
+          margin: EdgeInsets.only(left: 20.0, right: 20.0),
+          child: Column(children: <Widget>[
+            Line(title: widget.time),
+            InkWell(
+              child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: getColor(widget.status),),
+              onTap: () => showTimeTable(context, {"data": widget.data}),
+            )
+          ]),
+        ),
+      ),
     );
   }
 }

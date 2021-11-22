@@ -20,16 +20,23 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
 
-  load() async {
-    await main.initApp();
+  String actionText = '„Seid gütig zueinander, seid barmherzig“ \n~ Epheser 4:32';
 
-    if(main.splashScreen) {
-      next();
-    } else {
-      Timer(Duration(seconds: 2), () {
-        next();
-      });
-    }
+  load() async {
+    await main.initApp((state) {
+      if(!state) {
+        actionText = 'Es scheint Verbindungsprobleme zu geben,\nbitte versuche es später erneut.';
+        if(this.mounted) setState(() {});
+      } else {
+        if(main.splashScreen) {
+          next();
+        } else {
+          Timer(Duration(seconds: 2), () {
+            next();
+          });
+        }
+      }
+    });
   }
 
   next() {
@@ -70,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Image.asset("assets/img/fcg_logo_gym.png"),
             ),
             Container(
-              child: Text('„Seid gütig zueinander, seid barmherzig“ \n~ Epheser 4:32', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade300, fontSize: 16)),
+              child: Text(actionText, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade300, fontSize: 16)),
             ),
             Container(
               margin: EdgeInsets.only(top: 20),
