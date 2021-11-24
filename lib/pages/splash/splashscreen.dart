@@ -24,6 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   load() async {
     await main.initApp((state) {
+      print('status');
       if(!state) {
         actionText = 'Es scheint Verbindungsprobleme zu geben,\nbitte versuche es später erneut.';
         if(this.mounted) setState(() {});

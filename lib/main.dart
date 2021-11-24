@@ -43,14 +43,14 @@ initApp(Function(bool) callback) async {
   // }
 
   try {
-
     if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
       setUp = true;
-      if(!await device.isSessionValid()) device.refreshSession();
-      callback(true);
+      if (!await device.isSessionValid()) device.refreshSession();
     }
+    callback(true);
   } catch(_) {
     callback(false);
+    print(_);
   }
 }
 
