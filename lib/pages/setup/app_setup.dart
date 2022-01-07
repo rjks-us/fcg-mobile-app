@@ -58,7 +58,7 @@ class _SelectClassState extends State<SelectClass> {
     await response.checkCache();
 
     classList.clear();
-    
+
     response.onSuccess((classes) {
       classes!.forEach((element) {
         Map<String, dynamic> obj = element;
@@ -340,6 +340,41 @@ class _SelectCourseState extends State<SelectCourse> {
 
     section.clear();
 
+    ///Only in debug mode, simple selection of
+    if(dev) section.add(Container(
+        margin: EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(13.0)
+        ),
+        height: 80,
+        width: MediaQuery.of(context).size.width,
+        child: GestureDetector(
+          onTap: () {
+            if(widget.navFlow) {
+
+              List<String> tmp = ["44","129","194","259","294","369","494","699","789","819","1115","1147","1170"];
+
+              saveStringList('var-courses', tmp);
+              print('Saved new courses: $tmp');
+
+              Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (context) => SetUsername())
+              );
+              ///Restore cache
+              return;
+            }
+          },
+          child: Center(
+            child: Text(
+                'Load sample data',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        )
+    ));
+
     response.onSuccess((classes) {
       classes!.forEach((key, value) {
         String sectionName = key;
@@ -528,7 +563,7 @@ class _CourseSectionState extends State<CourseSection> {
 
     return Container(
       child: Column(children: <Widget>[
-        Line(title: widget.title),
+        Line(title: widget.title, blurred: false,),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: widget.courses,

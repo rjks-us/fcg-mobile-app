@@ -4,6 +4,8 @@ import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/pages/event/app_start_alert.dart';
+import 'package:fcg_app/pages/settings/pastnotifications.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,6 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int classId = 0;
   List<int> selectedCourses = [];
 
+  bool hasSchool = false;
+  double daySprintValue = 0.0;
+  String daySprintText = 'Dein Tag steht noch vor dir';
+
   List<Widget> currentDay = [],
       tmpDay = [
       TimeTablePreLoadingBox(time: '8:30'),
@@ -48,7 +54,65 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   onRefreshPress() async {
+    print('refresh home button pressed');
     await load(true);
+
+    WidgetsFlutterBinding.ensureInitialized();
+
+    PageCollection pageCollection = new PageCollection(false);
+
+    pageCollection.addPage(Container(
+      height: 100,
+      color: Colors.transparent,
+      child: Center(
+        child: Icon(Icons.pages, color: Colors.white,),
+      ),
+    ));
+
+    pageCollection.addPage(Container(
+      height: 100,
+      color: Colors.transparent,
+      child: Center(
+        child: Icon(Icons.swap_horiz, color: Colors.white,),
+      ),
+    ));
+
+    pageCollection.addPage(Container(
+      height: 100,
+      color: Colors.transparent,
+      child: Center(
+        child: Icon(Icons.account_box, color: Colors.white,),
+      ),
+    ));
+
+    createAppStartAlertDialog(context, pageCollection);
+  }
+
+  stSelectionWasMade(bool state) async {
+    DateTime now = DateTime.now();
+
+    saveBoolean('var-st-swap', state);
+    save('var-st-swap-date', '${now.year}-${now.month}-${now.day}');
+
+    if(this.mounted) refresh();
+  }
+
+  Future<bool> stHasToBeShown() async {
+    print(await getString('var-st-swap-date'));
+    print(await getBoolean('var-st-swap'));
+
+    String data = await getString('var-st-swap-date');
+    if(data != 'not-defined') {
+      List<String> date = data.toString().split(' ');
+      DateTime datum = new DateTime(int.parse(date[0]), int.parse(date[1]), int.parse(date[2]));
+      if(DateTime.now().difference(datum).inDays >= 25) { ///After 25 Days, the app will ask again
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
   }
 
   load(bool newRequest) async {
@@ -64,111 +128,110 @@ class _HomeScreenState extends State<HomeScreen> {
     classId = await getInt('var-class-id');
     selectedCourses = await getIntList('var-courses');
 
-    ///Check if it is weekend
-    if(lastRefresh.weekday == 6 || lastRefresh.weekday == 7) {
-      currentDay.add(Container(
-        child: Container(
-          margin: EdgeInsets.all(20),
-          child: Column(
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.only(bottom: 15.0),
-                child: Center(
-                  child: Icon(Icons.weekend, size: 40, color: Colors.grey,),
-                ),
-              ),
-              Container(
-                child: Center(
-                  child: Text(
-                    'Heute ist Wochenende,\n du hast keine Schule',
-                    style: TextStyle(color: Colors.grey, fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            ],
-          )
-        ),
-      ));
-      if(this.mounted) refresh();
-      return;
-    }
+    ///Timetable Magic
 
-    ///Request
-    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/timetable/$classId/${lastRefresh.year}/${lastRefresh.month}/${lastRefresh.day}', true, newRequest, !newRequest);
-    httpBuilder.Response response = await request.flush();
-    await response.checkCache();
+    Timetable timetable = new Timetable(lastRefresh, classId, selectedCourses, newRequest, () => onRefreshPress());
 
-    response.onSuccess((timetable) {
-      currentDay.clear();
+    await timetable.askAPI();
 
-      List<int> hours = [0];
+    ///Daily progess bar
+    if(timetable.timeTable.length != 0) {
+      try {
+        TimeTableElement first = timetable.timeTable[0], second = timetable.timeTable[timetable.timeTable.length - 1];
 
-      timetable.forEach((element) async {
-        var subject = element['subject'], start = element['start'], end = element['end'], teacher = element['teacher'], status = element['status'];
+        print(timetable.dateTime.toString());
 
-        int classStatus = 0;
-
-        String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
-
-        if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
-        if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
-
-        if(selectedCourses.contains(subject['id'])) {
-          var block = getBlockNumberFromTime('${start['hour']}:${start['minute']}');
-          var lastItem = hours[hours.length - 1];
-
-          if(lastItem + 1 != block && lastItem < block) {
-            int lastBlock = 0;
-            print((lastItem + 1));
-
-            for(int i = lastItem + 1; i < block; i++) {
-              lastBlock = i;
-              currentDay.add(TimeTableFreeElement(hour: '$i.', time: getTimeFromBlockNumber(i), isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, DateTime.now()))),));
-            }
-            hours.add(lastBlock);
-          }
-          bool visible = true;
-
-          if(status['type'] == 'CLASS') {
-            classStatus = 0;
-          } else if(status['type'] == 'CANCELED') {
-            classStatus = 1;
-          } else if(status['type'] == 'INFO') {
-            classStatus = 2;
-            visible = false;
-          }
-
-          if(visible) {
-            hours.add(block);
-            currentDay.add(TimetableElement(
-              status: classStatus,
-              hour: '$block.',
-              time: '${start['hour']}:${start['minute']}',
-              title: subject['name'],
-              subtitle: teacherName,
-              data: element,
-              isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, DateTime.now())))
-            ));
+        for(int i = 0; i < timetable.timeTable.length; i++) {
+          if(!timetable.timeTable[i].isFree() && timetable.timeTable[i].classStatus == 0 || timetable.timeTable[i].classStatus == 2) {
+            first = timetable.timeTable[i];
+            break;
           }
         }
-      });
-      lastRefresh = DateTime.now();
-    });
 
-    response.onNoResult((data) { ///No connection
-      currentDay.add(NoInternetConnectionScreen(refresh: () {
-        onRefreshPress();
-      }));
-    });
+        for(int i = timetable.timeTable.length - 1; i >= 0; i--) {
+          if(!timetable.timeTable[i].isFree() && timetable.timeTable[i].classStatus == 0 || timetable.timeTable[i].classStatus == 2) {
+            second = timetable.timeTable[i];
+            break;
+          }
+        }
 
-    response.onError((data) { ///Server Error
-      currentDay.add(AnErrorOccurred(refresh: () {
-        onRefreshPress();
-      }));
-    });
+        DateTime start = new DateTime(int.parse(first.date['year']), int.parse(first.date['month']), int.parse(first.date['day']), int.parse(first.start['hour']), int.parse(first.end['minute']));
+        DateTime end = new DateTime(int.parse(second.date['year']), int.parse(second.date['month']), int.parse(second.date['day']), int.parse(second.end['hour']), int.parse(second.end['minute']));
+        // DateTime now = new DateTime(2021, 12, 22, 11, 50);
+        DateTime now = new DateTime.now();
+        //
+        if(start.isAfter(now)) {
+          daySprintValue = 0.0;
+        } else if(end.isBefore(now)) {
+          daySprintValue = 1.0;
+          daySprintText = 'Du hast den Tag geschafft!';
+        } else {
+          int total = DateTimeRange(start: start, end: end).duration.inSeconds;
+          int ago = DateTimeRange(start: start, end: now).duration.inSeconds;
 
-    await response.process();
+          int current = total - ago;
+
+          print(total);
+          print(ago);
+          print(current);
+
+          daySprintValue = 1.0 - ((current / total) * 100) / 100;
+
+          daySprintText = 'Du hast bereits ${(daySprintValue * 100).toStringAsFixed(0)}% geschafft';
+
+          print('total: ' + daySprintValue.toString());
+        }
+
+      } catch(_) {
+        print(_);
+      }
+    }
+
+    currentDay.clear();
+
+    try {
+      List<TimeTableElement> st = timetable.getStudienzeiten();
+
+      bool visible = true;
+
+      print(st);
+
+      if(await stHasToBeShown() && st != [] && st.length == 4) {
+        currentDay.add(QuestionCard(
+          visible: visible,
+          title: 'Welche Studienzeit hast du heute?',
+          subtitle: 'Dies kann von dir jeder Zeit in den Einstellungen geändert werden.',
+          option1: st[0].subject['name'] + ' - ' + st[0].teacher['short'],
+          option2: st[1].subject['name'] + ' - ' + st[1].teacher['short'],
+          callback1: () {
+            print('selected ${st[0].subject['name']}');
+            visible = !visible;
+            if(weekNumber(lastRefresh).floor().isEven) {
+              stSelectionWasMade(true);
+            } else {
+              stSelectionWasMade(false);
+            }
+          },
+          callback2:() {
+            print('selected ${st[1].subject['name']}');
+            visible = !visible;
+            if(weekNumber(lastRefresh).floor().isOdd) {
+              stSelectionWasMade(true);
+            } else {
+              stSelectionWasMade(false);
+            }
+          },
+        ));
+      }
+    } catch(_) {
+
+    }
+
+    hasSchool = timetable.hasSchool();
+
+    currentDay.addAll(await timetable.getTimeTable());
+
+    lastRefresh = new DateTime.now();
 
     Timer(Duration(milliseconds: 5), () {
       if(this.mounted) {
@@ -193,12 +256,19 @@ class _HomeScreenState extends State<HomeScreen> {
     saveBoolean('tutorial-home-screen-1', true);
   }
 
+  Future<void> _refresh() async {
+    await load(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          controller: ScrollController(),
+      body: SingleChildScrollView(
+        controller: ScrollController(),
+        child: RefreshIndicator(
+          backgroundColor: Color.fromRGBO(29, 29, 29, 1),
+          color: Colors.indigo,
+          onRefresh: _refresh,
           child: VisibilityDetector(
             key: Key('week-home-dec-${randomKey()}'), /// <-- idk why this is needed, to not touch
             onVisibilityChanged: (info) {
@@ -223,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: <Widget>[
                     Container(
                         alignment: Alignment.topLeft,
-                        margin: EdgeInsets.only(left: 20.0, top: 40.0, right: 20.0),
+                        margin: EdgeInsets.only(left: 20.0, top: 60.0, right: 20.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -237,16 +307,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            /*Container( ///<--- Settings Gear, moved to nav bar
-                          alignment: Alignment.centerRight,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.settings,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => {onSettingsPress()},
-                          )
-                      )*/
+                            Container(
+                              alignment: Alignment.centerRight,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.notifications_active_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      CupertinoPageRoute(builder: (context) => NotificationList())
+                                  );
+                                },
+                              )
+                            )
                           ],
                         )
                     ),
@@ -285,29 +360,64 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                     ),
                     Container(
+                      child: Visibility(
+                        visible: hasSchool,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            Container(
+                              margin: EdgeInsets.all(20.00),
+                              child: ProgressCard(subtitle: 'Dein Tagesfortschritt', value: daySprintValue, title: daySprintText,),
+                            ),
+                            Container(
+                                alignment: Alignment.topLeft,
+                                margin: EdgeInsets.only(left: 20.0, right: 20.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Container(
+                                      child: Text(
+                                        'Heute',
+                                        style: TextStyle(
+                                            fontFamily: 'Nunito-Regular',
+                                            fontSize: 22.0,
+                                            color: Colors.white
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
                       child: Column(
                         children: currentDay,
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.all(20.0),
+                      margin: EdgeInsets.all(40.0),
                       child: Text(
-                        'Letztes update ${lastRefresh.hour}:${lastRefresh.minute}',
+                        'Letztes Update ${lastRefresh.hour}:${lastRefresh.minute}\nAlle Angaben ohne Gewähr',
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: 'Nunito-Regular',
                             fontSize: 12.0,
                             color: Colors.grey
                         ),
                       ),
-                    )
+                    ),
+                    BlockSpacer(height: 100)
                   ],
                 ),
               ),
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }

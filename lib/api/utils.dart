@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:math';
 import 'helper.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 
 Future<bool> apiIsOnline() async {
   try {
@@ -32,4 +34,18 @@ String randomKey() {
   String getRandomString(int length) => String.fromCharCodes(Iterable.generate(length, (_) => _chars.codeUnitAt(Random().nextInt(_chars.length))));
 
   return(getRandomString(100));
+}
+
+String getPlatform() {
+  if (kIsWeb) {
+    return "web";
+  } else {
+    if(Platform.isAndroid) return "android";
+    if(Platform.isFuchsia) return "fuchsia";
+    if(Platform.isIOS) return "ios";
+    if(Platform.isLinux) return "linux";
+    if(Platform.isMacOS) return "macos";
+    if(Platform.isWindows) return "windows";
+  }
+  return "-";
 }

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "206829795173",
+    "project_id": "fcg-app-v1-aa4fe",
+    "storage_bucket": "fcg-app-v1-aa4fe.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:206829795173:android:0309758099c128ef84138c",
+        "android_client_info": {
+          "package_name": "us.rjks.fcg_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "206829795173-0vi3iq8ulfe1h4uno58ftkv3j60256rm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBSo4I6WjQBBcWi_3vLKLmYGk6lTJF5OQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "206829795173-0vi3iq8ulfe1h4uno58ftkv3j60256rm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

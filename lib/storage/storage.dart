@@ -78,6 +78,17 @@ Future<int> getInt(String key) async {
   return result;
 }
 
+Future<bool> getBoolean(String key) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SharedPreferences storage = await SharedPreferences.getInstance();
+
+  var result = storage.getBool(key);
+  if(result == null) return false;
+
+  return result;
+}
+
 Future<Map<String, dynamic>> getJSON(String key) async {
   WidgetsFlutterBinding.ensureInitialized();
 

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 Cache httpCache = new Cache(Duration(minutes: 10));
 
 class Request {
-  late var httpRequest;
+  late http.Request httpRequest;
 
   late bool shouldCache = false, makeNewRequest = true, shouldLoadFromCacheIfPossible = false;
 
@@ -30,11 +30,11 @@ class Request {
     httpRequest = http.Request(this.method, Uri.parse(host + '/' + this.router));
   }
 
-  setHeader(Map<String, String> headers) async {
+  setHeader(Map<String, String> headers) {
     httpRequest.headers.addAll(headers);
   }
 
-  setBody(Map<String, dynamic> body) async {
+  setBody(Map<String, dynamic> body) {
     httpRequest.body = jsonEncode(body);
   }
 

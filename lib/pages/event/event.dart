@@ -4,6 +4,7 @@ import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/api/httpBuilder.dart' as httpBuilder;
 import 'package:fcg_app/main.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/theme.dart' as theme;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -34,6 +35,10 @@ class _EventScreenState extends State<EventScreen> {
 
   onRefreshPress() async {
     await load(true);
+  }
+
+  onAddArticlePress() {
+    Navigator.push(context, CupertinoPageRoute(builder: (context) => AddArticlePage()));
   }
 
   load(bool newRequest) async {
@@ -90,8 +95,8 @@ class _EventScreenState extends State<EventScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.center,
                   colors: [
-                    Color.fromRGBO(54, 66, 106, 1),
-                    Color.fromRGBO(29, 29, 29, 1)
+                    theme.primaryBackground,
+                    theme.secondaryBackground
                   ]
               )
           ),
@@ -100,38 +105,38 @@ class _EventScreenState extends State<EventScreen> {
               children: <Widget>[
                 Container(
                     alignment: Alignment.topLeft,
-                    margin: EdgeInsets.only(left: 20.0, top: 40.0, right: 20.0),
+                    margin: EdgeInsets.only(left: 20.0, top: 60.0, right: 20.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Container(
                           child: Text(
-                            '${date.day}. ${month[date.month - 1]} ${date.year}',
+                            '${date.day}. ${month[date.month - 1]}',
                             style: TextStyle(
                                 fontFamily: 'Nunito-Regular',
                                 fontSize: 29.0,
-                                color: Colors.white
+                                color: theme.primaryIcon
                             ),
                           ),
                         ),
-                        Container(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.settings,
-                                color: Colors.white,
-                              ),
-                              onPressed: () => onRefreshPress(), ///TODO: Settings for events
-                            )
-                        )
+                        // Container(
+                        //     alignment: Alignment.centerRight,
+                        //     child: IconButton(
+                        //       icon: Icon(
+                        //         Icons.add,
+                        //         color: theme.primaryIcon,
+                        //       ),
+                        //       onPressed: () => onAddArticlePress(), ///TODO: Settings for events
+                        //     )
+                        // )
                       ],
                     )
                 ),
                 Container(
                   child: AlertBox(
-                    color: Colors.red,
-                    text: 'Nachrichten des Tages',
-                    label: Icon(Icons.notifications_active, size: 30, color: Colors.white,),
+                    color: theme.darkActionRed,
+                    text: 'Beiträge der Schule',
+                    label: Icon(Icons.notifications_active, size: 30, color: theme.primaryIcon,),
                   ),
                 ),
                 Container(
@@ -169,7 +174,7 @@ class _EventSectionState extends State<EventSection> {
 
   List<Widget> tmp = [
     EventContentBox(
-      color: Colors.orange,
+      color: theme.actionOrange,
       title: 'Bestellt euch jetzt ein Jahrbuch',
       subtitle: 'An die Q2',
       author: 'Nachricht der SV',
@@ -177,7 +182,7 @@ class _EventSectionState extends State<EventSection> {
       content: 'Bestellt euch jetzt ein buch ihr hunde',
     ),
     EventContentBox(
-      color: Colors.indigo,
+      color: theme.actionDarkBlue,
       title: 'Halloweenparty am 26 November 2021',
       subtitle: 'An alle Schüler des FCG`s',
       author: 'Nachricht der Q2',
@@ -206,7 +211,7 @@ class _EventSectionState extends State<EventSection> {
                 style: TextStyle(
                     fontFamily: 'Nunito-Regular',
                     fontSize: 22.0,
-                    color: Colors.white
+                    color: theme.primaryText
                 ),
               ),
             ),
@@ -345,3 +350,118 @@ class _EventContentBoxState extends State<EventContentBox> {
   }
 }
 
+class AddArticlePage extends StatefulWidget {
+  const AddArticlePage({Key? key}) : super(key: key);
+
+  @override
+  _AddArticlePageState createState() => _AddArticlePageState();
+}
+
+class _AddArticlePageState extends State<AddArticlePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(54, 66, 106, 1),
+        elevation: 0,
+      ),
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(54, 66, 106, 1),
+                Color.fromRGBO(29, 29, 29, 1)
+              ]
+          ),
+        ),
+        child: Container(
+          margin: EdgeInsets.only(left: 20, right: 20),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    margin: EdgeInsets.only(top: 10),
+                    child: Text('Schreibe einen neuen Post',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                          fontFamily: 'Nunito-Regular',
+                          fontSize: 22.0,
+                          color: Colors.white
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 5),
+                    child: Text('Du wirst als SV angezeigt',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                          fontFamily: 'Nunito-Regular',
+                          fontSize: 18.0,
+                          color: Colors.grey
+                      ),
+                    ),
+                  ),
+                  Container(
+                      margin: EdgeInsets.only(top: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            margin: EdgeInsets.only(top: 10),
+                            child: Text('Titel des Posts', style: TextStyle(color: Colors.white),),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(top: 10),
+                            child: TextField(
+                              maxLines: 1,
+                              autofocus: true,
+                              autocorrect: false,
+                              cursorColor: Colors.blue,
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration.collapsed(hintText: "Enter your text here", fillColor: Colors.black87, filled: true),
+                            ),
+                          )
+                        ],
+                      )
+                  ),
+                  Container(
+                      margin: EdgeInsets.only(top: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Container(
+                            margin: EdgeInsets.only(top: 10),
+                            child: Text('Blog Post', style: TextStyle(color: Colors.white),),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(top: 10),
+                            child: TextField(
+                              maxLines: 8,
+                              autofocus: true,
+                              autocorrect: false,
+                              cursorColor: Colors.blue,
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration.collapsed(hintText: "Enter your text here", fillColor: Colors.black87, filled: true),
+                            ),
+                          )
+                        ],
+                      )
+                  )
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

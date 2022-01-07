@@ -29,9 +29,26 @@ class _WeekScreenState extends State<WeekScreen> {
 
   final PageController pageController = PageController();
   bool showActionButton = false;
-  int currentPageIndex = 0;
+  int currentPageIndex = 0, currentPage = 0;
+
+  DateTime currentDatePage = DateTime.now();
+
+  bool backPossible = false, tomorrowPossible = true;
+
+  goToLastPage() {
+    goToPage(currentPage - 1);
+    refresh();
+  }
+
+  goToNextPage() {
+    createPageDayAfter();
+    currentPage++;
+    goToPage(currentPage);
+    refresh();
+  }
 
   goToPage(int index) {
+    currentPage = index;
     pageController.animateToPage(
       index,
       duration: Duration(milliseconds: 300),
@@ -90,6 +107,7 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   void initState() {
     super.initState();
+    lastIndexCreated = 0;
     createStartPage();
     createPageDayAfter();
   }
@@ -97,49 +115,127 @@ class _WeekScreenState extends State<WeekScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndTop,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterFloat,
+      bottomNavigationBar: Container(
+        margin: EdgeInsets.only(bottom: 70),
+        width: MediaQuery.of(context).size.width,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.black87
+        ),
         child: Container(
-          child: PageView(
-            controller: pageController,
-            onPageChanged: (page) {
-              print(page);
-              //FloatingActionButton only shown if not on page 0
-              if(page > 0) {
-                print('a');
-                showActionButton = true;
-                refresh();
-              } else if(page == 0) {
-                print('b');
-                showActionButton = false;
-                refresh();
-              }
-
-              //Dynamically add next page if last page is shown
-              if((page) == lastIndexCreated) {
-                print('c');
-                lastIndexCreated = page;
-                return createPageDayAfter();
-              }
-            },
-            pageSnapping: true,
-            children: _pages,
+          margin: EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Container(
+                child: Visibility(
+                  child: GestureDetector(
+                    onTap: ()  => goToLastPage(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                            child: Icon(Icons.arrow_back_ios_outlined, color: (backPossible ? Colors.white : Colors.grey),)
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(left: 10),
+                          child: Text('Gestern', style: TextStyle(color: (backPossible ? Colors.white : Colors.grey), fontSize: 12),),
+                        ),
+                      ],
+                    ),
+                  ),
+                  visible: true,
+                ),
+              ),
+              Container(
+                height: 100,
+                width: 100,
+                child: Transform(
+                  transform: Matrix4.translationValues(0, -20, 0),
+                  child: InkWell(
+                    onTap: () => {goToPage(0)},
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      margin: EdgeInsets.only(top: 0),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            spreadRadius: 3,
+                            blurRadius: 4,
+                            offset: Offset(0, 3), // changes position of shadow
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(Icons.today, color: showActionButton ? Colors.white : Colors.grey,),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                child: Visibility(
+                  child: GestureDetector(
+                    onTap: () => goToNextPage(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          margin: EdgeInsets.only(right: 10),
+                          child: Text('Morgen', style: TextStyle(color: Colors.white, fontSize: 12),),
+                        ),
+                        Container(
+                            child: Icon(Icons.arrow_forward_ios_outlined, color: Colors.white,)
+                        ),
+                      ],
+                    ),
+                  ),
+                  visible: tomorrowPossible,
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      floatingActionButton: Visibility(
-        visible: showActionButton,
-        child: Container(
-          margin: EdgeInsets.all(20),
-          child: FloatingActionButton(
-            onPressed: () => {goToPage(0)},
-            tooltip: 'Zurück zu heute',
-            child: Icon(Icons.arrow_back, color: Colors.white,),
-          ),
-        )
-      )
+      body: Container(
+        child: PageView(
+          controller: pageController,
+          onPageChanged: (page) {
+            currentPage = page;
+            print('p: ' + page.toString());
+            print('l: ' + lastIndexCreated.toString());
+            //FloatingActionButton only shown if not on page 0
+            if(page > 0) {
+              print('a');
+              showActionButton = true;
+              //Shows Back Button
+              backPossible = true;
+              refresh();
+            } else if(page == 0) {
+              print('b');
+              //Hides Back Button
+              backPossible = false;
+              showActionButton = false;
+              refresh();
+            }
+
+            //Dynamically add next page if last page is shown
+            if((page) == lastIndexCreated) {
+
+              print('c');
+              lastIndexCreated = page;
+              return createPageDayAfter();
+            }
+          },
+          pageSnapping: true,
+          children: _pages,
+        ),
+      ),
     );
   }
 }
@@ -157,6 +253,7 @@ class _WeekPageState extends State<WeekPage> {
 
   DateTime lastRefresh = DateTime.now();
   int classId = 0;
+  bool swappedSt = false;
   List<int> selectedCourses = [];
 
   List<String> days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
@@ -185,6 +282,33 @@ class _WeekPageState extends State<WeekPage> {
     await load(true);
   }
 
+  stSelectionWasMade(bool state) async {
+    DateTime now = DateTime.now();
+
+    saveBoolean('var-st-swap', state);
+    save('var-st-swap-date', '${now.year}-${now.month}-${now.day}');
+
+    if(this.mounted) refresh();
+  }
+
+  Future<bool> stHasToBeShown() async {
+    print(await getString('var-st-swap-date'));
+    print(await getBoolean('var-st-swap'));
+
+    String data = await getString('var-st-swap-date');
+    if(data != 'not-defined') {
+      List<String> date = data.toString().split(' ');
+      DateTime datum = new DateTime(int.parse(date[0]), int.parse(date[1]), int.parse(date[2]));
+      if(DateTime.now().difference(datum).inDays >= 25) { ///After 25 Days, the app will ask again
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
+
   load(bool newRequest) async {
 
     ///Show loading boxes
@@ -196,113 +320,59 @@ class _WeekPageState extends State<WeekPage> {
     ///Loading local variables
     classId = await getInt('var-class-id');
     selectedCourses = await getIntList('var-courses');
+    swappedSt = await getBoolean('var-st-swapp');
 
-    ///Check if it is weekend
-    if(lastRefresh.weekday == 6 || lastRefresh.weekday == 7) {
-      currentDay.add(Container(
-        child: Container(
-            margin: EdgeInsets.all(20),
-            child: Column(
-              children: <Widget>[
-                Container(
-                  margin: EdgeInsets.only(bottom: 15.0),
-                  child: Center(
-                    child: Icon(Icons.weekend, size: 40, color: Colors.grey,),
-                  ),
-                ),
-                Container(
-                  child: Center(
-                    child: Text(
-                      'Heute ist Wochenende,\n du hast keine Schule',
-                      style: TextStyle(color: Colors.grey, fontSize: 18),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                )
-              ],
-            )
-        ),
-      ));
-      if(this.mounted) refresh();
-      return;
+    ///Timetable Magic
+
+    Timetable timetable = new Timetable(widget.date, classId, selectedCourses, newRequest, () => onRefreshPress());
+
+    await timetable.askAPI();
+
+    if(timetable.timeTable.length != 0) {
+      TimeTableElement first = timetable.timeTable[0], second = timetable.timeTable[timetable.timeTable.length - 1];
     }
-
-    ///Request
-    httpBuilder.Request request = new httpBuilder.Request('GET', 'v1/timetable/$classId/${widget.date.year}/${widget.date.month}/${widget.date.day}', true, newRequest, !newRequest);
-    httpBuilder.Response response = await request.flush();
-    await response.checkCache();
 
     currentDay.clear();
 
-    response.onSuccess((timetable) {
+    try {
+      List<TimeTableElement> st = timetable.getStudienzeiten();
 
-      List<int> hours = [0];
+      bool visible = true;
 
-      timetable.forEach((element) async {
-        var subject = element['subject'], start = element['start'], end = element['end'], teacher = element['teacher'], status = element['status'];
+      print(st);
 
-        int classStatus = 0;
-
-        String teacherName = '${teacher['firstname']} ${teacher['lastname']}';
-
-        if(teacher['firstname'] == null || teacher['lastname'] == null) teacherName = '-';
-        if(teacherName.split('')[0] == ' ') teacherName = teacherName.substring(1, teacherName.length);
-
-        if(selectedCourses.contains(subject['id'])) {
-          var block = getBlockNumberFromTime('${start['hour']}:${start['minute']}');
-          var lastItem = hours[hours.length - 1];
-
-          if(hours[hours.length - 1] + 1 != block) {
-            int lastBlock = 0;
-            for(int i = lastItem + 1; i < block; i++) {
-              lastBlock = i;
-              currentDay.add(TimeTableFreeElement(hour: '$i.', time: getTimeFromBlockNumber(i), isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, widget.date)))));
+      if(await stHasToBeShown() && st != [] && st.length == 4) {
+        currentDay.add(QuestionCard(
+          visible: visible,
+          title: 'Welche Studienzeit hast du heute?',
+          subtitle: 'Dies kann von dir jeder Zeit in den Einstellungen geändert werden.',
+          option1: st[0].subject['name'] + ' - ' + st[0].teacher['short'],
+          option2: st[1].subject['name'] + ' - ' + st[1].teacher['short'],
+          callback1: () {
+            print('selected ${st[0].subject['name']}');
+            visible = !visible;
+            if(weekNumber(widget.date).floor().isEven) {
+              stSelectionWasMade(true);
+            } else {
+              stSelectionWasMade(false);
             }
-            hours.add(lastBlock);
-          }
-          bool visible = true;
+          },
+          callback2:() {
+            print('selected ${st[1].subject['name']}');
+            visible = !visible;
+            if(weekNumber(widget.date).floor().isOdd) {
+              stSelectionWasMade(true);
+            } else {
+              stSelectionWasMade(false);
+            }
+          },
+        ));
+      }
+    } catch(_) {
 
-          if(status['type'] == 'CLASS') {
-            classStatus = 0;
-          } else if(status['type'] == 'CANCELED') {
-            classStatus = 1;
-          } else if(status['type'] == 'INFO') {
-            classStatus = 2;
-            visible = false;
-          }
+    }
 
-          if(visible) {
-            hours.add(block);
-            currentDay.add(TimetableElement(
-              status: classStatus,
-              hour: '$block.',
-              time: '${start['hour']}:${start['minute']}',
-              title: subject['name'],
-              subtitle: teacherName,
-              data: element,
-              isOver: (DateTime.now().isAfter(getDateTimeFromBlockNumber(block, widget.date)))
-            ));
-          }
-        }
-      });
-      lastRefresh = DateTime.now();
-    });
-
-    response.onNoResult((data) { ///No connection
-      currentDay.add(NoInternetConnectionScreen(refresh: () {
-        onRefreshPress();
-      }));
-      if(this.mounted) refresh();
-    });
-
-    response.onError((data) { ///Server Error
-      currentDay.add(AnErrorOccurred(refresh: () {
-        onRefreshPress();
-      }));
-      if(this.mounted) refresh();
-    });
-
-    await response.process();
+    currentDay.addAll(await timetable.getTimeTable());
 
     Timer(Duration(milliseconds: 5), () {
       if(this.mounted) {
@@ -340,7 +410,7 @@ class _WeekPageState extends State<WeekPage> {
               children: <Widget>[
                 Container(
                   alignment: Alignment.topLeft,
-                  margin: EdgeInsets.only(left: 20.0, top: 40.0, right: 20.0),
+                  margin: EdgeInsets.only(left: 20.0, top: 60.0, right: 20.0),
                   child: Text(
                     //'${days[widget.date.weekday - 1]}, ${widget.date.day}. ${month[widget.date.month - 1]} ${widget.date.year}',
                     '${days[widget.date.weekday - 1]}',
@@ -362,16 +432,18 @@ class _WeekPageState extends State<WeekPage> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.all(20.0),
+                  margin: EdgeInsets.all(40.0),
                   child: Text(
-                    'Letztes update 21:11',
+                    'Letztes Update ${lastRefresh.hour}:${lastRefresh.minute}\nAlle Angaben ohne Gewähr',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                         fontFamily: 'Nunito-Regular',
                         fontSize: 12.0,
                         color: Colors.grey
                     ),
                   ),
-                )
+                ),
+                BlockSpacer(height: 150)
               ],
             ),
           )

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/storage/storage.dart';
@@ -58,6 +59,8 @@ register() async {
   if (response.statusCode == 200) {
     Map<String, dynamic> body = new Map<String, dynamic>();
     body = jsonDecode(await response.stream.bytesToString());
+
+    print(body);
 
     Map<String, dynamic> data = body['data'];
 
@@ -229,6 +232,8 @@ Future<bool> deleteThisDevice() async {
 
   var request = createRequest('POST', 'v1/devices/delete');
   request.headers.addAll(await getHeader());
+
+  print(request.headers);
 
   var response = await request.send();
 

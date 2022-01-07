@@ -31,7 +31,7 @@ void showTimeTable(var context, Map<String, dynamic> paramObject) {
       endSection = object['end'],
       dateSection = object['date'];
 
-  String status = statusSection['type'], message = 'Keine Informationen zu dieser Stunde';
+  String status = statusSection['type'], message = 'Es gibt keine Informationen zu dieser Stunde';
   List<Widget> entries = <Widget>[];
 
   if(roomSection['name'] != null) entries.add(TimeTableInfoScreenListElement(icon: Icons.room_outlined, data: '${roomSection['name'].toString()} - ${roomSection['short'].toString()} '));
@@ -59,7 +59,7 @@ void showTimeTable(var context, Map<String, dynamic> paramObject) {
       width: MediaQuery.of(context).size.width,
       child: Center(
         child: Text(
-          'Entfällt Heute',
+          'Entfällt',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -144,12 +144,41 @@ void showTimeTable(var context, Map<String, dynamic> paramObject) {
                 ),
               ),
               Container(
-                  margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 50.0),
+                  margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                   width: MediaQuery.of(context).size.width,
                   child: Column(
                     children: entries,
                   )
               ),
+              // Container(
+              //   width: MediaQuery.of(context).size.width,
+              //   margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+              //   child: Center(
+              //     child: Text(
+              //       'ID: ${object['id']} Ray: ${object['rayid']}',
+              //       style: TextStyle(color: Colors.white12),
+              //     ),
+              //   ),
+              // ),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: 80,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    margin: EdgeInsets.all(20),
+                    color: Colors.indigo,
+                    child: Center(
+                      child: Text(
+                        'Stunde ändern',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  )
+                )
+              )
             ],
           ),
         ),

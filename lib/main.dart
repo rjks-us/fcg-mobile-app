@@ -1,9 +1,11 @@
+import 'package:fcg_app/admin/admin.dart';
 import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/device/device.dart' as device;
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
 import 'package:fcg_app/pages/components/comp.dart';
+import 'package:fcg_app/pages/event/app_start_alert.dart';
 import 'package:fcg_app/pages/event/event.dart';
 import 'package:fcg_app/pages/home.dart';
 import 'package:fcg_app/pages/settings/settings.dart';
@@ -12,9 +14,14 @@ import 'package:fcg_app/pages/splash/splashscreen.dart';
 import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
 import 'package:fcg_app/pages/tmp/week.dart';
 import 'package:fcg_app/storage/storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 ///Global Variables
 
@@ -28,20 +35,6 @@ bool dev = true;
 bool setUp = false;
 
 initApp(Function(bool) callback) async {
-  // var request = await getVersion();
-  //
-  // if(request != null) {
-  //   var version = request['data'];
-  //
-  //   apiOnline = true;
-  //
-  //   author = version['author'];
-  //   version = version['version'];
-  // } else {
-  //   var connected = await hasConnection(); ///Check if general a connection is possible, pinged google.com
-  //   if(connected) connection = true;
-  // }
-
   try {
     if(await device.isDeviceSetUp() && await device.deviceRegistered()) {
       setUp = true;
@@ -55,21 +48,87 @@ initApp(Function(bool) callback) async {
 }
 
 void main() async {
-  runApp(App());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    print('User granted permission');
+
+    String? token = await FirebaseMessaging.instance.getToken();
+
+    print('Token: $token');
+
+  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+    print('User granted provisional permission');
+  } else {
+    print('User declined or has not accepted permission');
+  }
+
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent
+    )
+  );
+  await initApp((p0) => runApp(App()));
 }
 
 class App extends StatelessWidget {
-  // This widget is the root of your application.
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'FCG App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: SplashScreen(),
+    return FutureBuilder(
+      future: Init.instance.initialize(),
+      builder: (context, AsyncSnapshot snapshot) {
+        // Show splash screen while waiting for app resources to load:
+        if (snapshot.connectionState == ConnectionState.waiting) {
+
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'FCG App',
+            theme: ThemeData(
+              primarySwatch: Colors.indigo,
+            ),
+            home: SplashScreen(),
+          );
+        } else {
+          if(setUp) {
+            // Loading is done, return the app:
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'FCG App',
+              theme: ThemeData(
+                primarySwatch: Colors.indigo,
+              ),
+              home: Home(),
+            );
+          } else {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'FCG App',
+              theme: ThemeData(
+                primarySwatch: Colors.indigo,
+              ),
+              home: SelectClass(userNav: true,),
+            );
+          }
+        }
+      },
     );
   }
 }
@@ -84,6 +143,12 @@ class _MyHomePageState extends State<Home> {
 
   int _currentIndex = 0;
   final _inactiveColor = Colors.grey;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +194,7 @@ class _MyHomePageState extends State<Home> {
         BottomNavyBarItem(
           icon: Icon(Icons.settings),
           title: Text('Sonstiges'),
-          activeColor: Colors.purpleAccent,
+          activeColor: Colors.grey,
           inactiveColor: _inactiveColor,
           textAlign: TextAlign.center,
         ),
@@ -186,7 +251,7 @@ class _TimeTableFreeElementState extends State<TimeTableFreeElement> {
         child: Container(
           margin: EdgeInsets.only(left: 20.0, right: 20.0),
           child: Column(children: <Widget>[
-            Line(title: widget.time),
+            Line(title: widget.time, blurred: widget.isOver,),
             InkWell(
               child: TimeTableFreeElementBox(hour: widget.hour),
               onTap: () => {},
@@ -213,7 +278,7 @@ class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: 100.0,
+      height: 60.0,
       decoration: BoxDecoration(
           boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
           borderRadius: BorderRadius.circular(13.0),
@@ -234,7 +299,7 @@ class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
             child: Row(
               children: <Widget>[
                 Container(
-                  width: 80,
+                  width: 60,
                   height: 100,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.only(
@@ -244,7 +309,7 @@ class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
                   child: Center(
                     child: Text(
                       widget.hour,
-                      style: TextStyle(fontSize: 40.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+                      style: TextStyle(fontSize: 22.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
                     ),
                   ),
                 ),
@@ -260,7 +325,7 @@ class _TimeTableFreeElementBoxState extends State<TimeTableFreeElementBox> {
                             'Freistunde',
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                            style: TextStyle(fontSize: 16.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
                           ),
                         ),
                       ],
@@ -311,7 +376,7 @@ class _TimetableElementState extends State<TimetableElement> {
       return Colors.red;
     }
     if(state == 2) {
-      return Colors.yellow;
+      return Colors.orange;
     }
   }
 
@@ -323,7 +388,7 @@ class _TimetableElementState extends State<TimetableElement> {
         child: Container(
           margin: EdgeInsets.only(left: 20.0, right: 20.0),
           child: Column(children: <Widget>[
-            Line(title: widget.time),
+            Line(title: widget.time, blurred: widget.isOver,),
             InkWell(
               child: TimetableElementBox(hour: widget.hour, title: widget.title, subtitle: widget.subtitle, color: getColor(widget.status),),
               onTap: () => showTimeTable(context, {"data": widget.data}),
@@ -350,7 +415,7 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
   Widget build(BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: 100.0,
+      height: 60.0,
       decoration: BoxDecoration(
         boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
         borderRadius: BorderRadius.circular(13.0),
@@ -369,9 +434,10 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
         children: <Widget>[
           Container(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  width: 80,
+                  width: 60,
                   height: 100,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.only(
@@ -381,7 +447,7 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
                   child: Center(
                     child: Text(
                       widget.hour,
-                      style: TextStyle(fontSize: 40.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+                      style: TextStyle(fontSize: 22.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
                     ),
                   ),
                 ),
@@ -397,7 +463,7 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
                           widget.title,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
-                          style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
+                          style: TextStyle(fontSize: 16.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade300),
                         ),
                       ),
                       Container(
@@ -406,7 +472,7 @@ class _TimetableElementBoxState extends State<TimetableElementBox> {
                           widget.subtitle,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
-                          style: TextStyle(fontSize: 19.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade400),
+                          style: TextStyle(fontSize: 12.0, fontFamily: 'Nunito-SemiBold', color: Colors.grey.shade400),
                         ),
                       )
                     ],
@@ -484,7 +550,7 @@ class _AlertBoxState extends State<AlertBox> {
             child: Text(
               widget.text,
               textDirection: TextDirection.ltr,
-              style: TextStyle(fontSize: 21.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
+              style: TextStyle(fontSize: 18.0, fontFamily: 'Nunito-SemiBold', color: Colors.white),
             ),
           )
         ],

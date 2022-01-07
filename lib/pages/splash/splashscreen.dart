@@ -20,39 +20,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
 
-  String actionText = '„Seid gütig zueinander, seid barmherzig“ \n~ Epheser 4:32';
-
-  load() async {
-    await main.initApp((state) {
-      print('status');
-      if(!state) {
-        actionText = 'Es scheint Verbindungsprobleme zu geben,\nbitte versuche es später erneut.';
-        if(this.mounted) setState(() {});
-      } else {
-        if(main.splashScreen) {
-          next();
-        } else {
-          Timer(Duration(seconds: 2), () {
-            next();
-          });
-        }
-      }
-    });
-  }
-
-  next() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder:
-          (context) => main.setUp ? main.Home() : SelectClass(userNav: true,)),
-          (Route<dynamic> route) => false,
-    );
-  }
-
   @override
   void initState() {
     super.initState();
-    load();
   }
 
   @override
@@ -72,13 +42,30 @@ class _SplashScreenState extends State<SplashScreen> {
             )
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              child: Image.asset("assets/img/fcg_logo_gym.png"),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [BoxShadow(color: Colors.black12, offset: Offset(0, 5), blurRadius: 5, spreadRadius: 3)],
+                    ) ,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      child: Image.asset("assets/img/fcg_app_logo.png"),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 20),
+                    child: Text('FCG-App', style: TextStyle(color: Colors.white, fontSize: 18),),
+                  )
+                ],
+              )
             ),
             Container(
-              child: Text(actionText, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade300, fontSize: 16)),
+              child: Text('', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade300, fontSize: 16)),
             ),
             Container(
               margin: EdgeInsets.only(top: 20),
@@ -95,5 +82,17 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       ),
     );
+  }
+}
+
+class Init {
+  Init._();
+  static final instance = Init._();
+
+  Future initialize() async {
+    // This is where you can initialize the resources needed by your app while
+    // the splash screen is displayed.  Remove the following example because
+    // delaying the user experience is a bad design practice!
+    await Future.delayed(const Duration(seconds: 3));
   }
 }
