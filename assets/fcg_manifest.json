@@ -1,6 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Robert J. Kratz",
   "website": "fcg-app.de",
-  "contact": "fcg.developers@gmail.com"
+  "contact": "fcg.developers@gmail.com",
+  "provider": "rjks.us"
 }

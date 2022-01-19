@@ -58,6 +58,7 @@ flutter_icons:
 # The following section is specific to Flutter.
 flutter:
   assets:
+    - ./assets/
     - ./assets/img/
   fonts:
     - family: NunitoSans

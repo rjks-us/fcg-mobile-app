@@ -3,6 +3,8 @@ import 'package:fcg_app/api/helper.dart';
 import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/api/utils.dart';
 import 'package:fcg_app/device/device.dart' as device;
+import 'package:fcg_app/fcgapp/main.dart';
+import 'package:fcg_app/fcgapp/pages/setup/setup_class.dart';
 import 'package:fcg_app/modal/modal_bottom_sheet.dart';
 import 'package:fcg_app/pages/components/comp.dart';
 import 'package:fcg_app/pages/event/app_start_alert.dart';
@@ -11,7 +13,7 @@ import 'package:fcg_app/pages/home.dart';
 import 'package:fcg_app/pages/settings/settings.dart';
 import 'package:fcg_app/pages/setup/app_setup.dart';
 import 'package:fcg_app/pages/splash/splashscreen.dart';
-import 'package:fcg_app/pages/tmp/custom_animated_bottom_bar.dart';
+import 'package:fcg_app/fcgapp/components/custom_animated_bottom_bar.dart';
 import 'package:fcg_app/pages/tmp/week.dart';
 import 'package:fcg_app/storage/storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -22,6 +24,8 @@ import 'package:flutter/services.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+
+import 'fcgapp/main.dart' as Main;
 
 ///Global Variables
 
@@ -48,44 +52,46 @@ initApp(Function(bool) callback) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  Main.main();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // WidgetsFlutterBinding.ensureInitialized();
+  //
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform,
+  // );
 
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  // FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //
+  // NotificationSettings settings = await messaging.requestPermission(
+  //   alert: true,
+  //   announcement: false,
+  //   badge: true,
+  //   carPlay: false,
+  //   criticalAlert: false,
+  //   provisional: false,
+  //   sound: true,
+  // );
+  //
+  // if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+  //   print('User granted permission');
+  //
+  //   String? token = await FirebaseMessaging.instance.getToken();
+  //
+  //   print('Token: $token');
+  //
+  // } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+  //   print('User granted provisional permission');
+  // } else {
+  //   print('User declined or has not accepted permission');
+  // }
 
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
-
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('User granted permission');
-
-    String? token = await FirebaseMessaging.instance.getToken();
-
-    print('Token: $token');
-
-  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-    print('User granted provisional permission');
-  } else {
-    print('User declined or has not accepted permission');
-  }
-
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent
-    )
-  );
-  await initApp((p0) => runApp(App()));
+  // SystemChrome.setSystemUIOverlayStyle(
+  //   SystemUiOverlayStyle(
+  //     statusBarColor: Colors.transparent,
+  //     systemNavigationBarColor: Colors.transparent
+  //   )
+  // );
+  // await initApp((p0) => runApp(App()));
 }
 
 class App extends StatelessWidget {
@@ -97,6 +103,8 @@ class App extends StatelessWidget {
       builder: (context, AsyncSnapshot snapshot) {
         // Show splash screen while waiting for app resources to load:
         if (snapshot.connectionState == ConnectionState.waiting) {
+
+          print('log1');
 
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -124,7 +132,9 @@ class App extends StatelessWidget {
               theme: ThemeData(
                 primarySwatch: Colors.indigo,
               ),
-              home: SelectClass(userNav: true,),
+              home: SelectClass(
+                userNav: true,
+              ),
             );
           }
         }

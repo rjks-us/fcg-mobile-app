@@ -21,26 +21,26 @@ void init() async {
 
   await setupInteractedMessage();
 
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
-
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('[FCM] User granted permission');
-    status = true;
-  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-    print('[FCM] User granted provisional permission');
-    status = true;
-  } else {
-    print('[FCM] User declined or has not accepted permission');
-    status = false;
-  }
+  // NotificationSettings settings = await messaging.requestPermission(
+  //   alert: true,
+  //   announcement: false,
+  //   badge: true,
+  //   carPlay: false,
+  //   criticalAlert: false,
+  //   provisional: false,
+  //   sound: true,
+  // );
+  //
+  // if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+  //   print('[FCM] User granted permission');
+  //   status = true;
+  // } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+  //   print('[FCM] User granted provisional permission');
+  //   status = true;
+  // } else {
+  //   print('[FCM] User declined or has not accepted permission');
+  //   status = false;
+  // }
 }
 
 Future<String> requestFMCDeviceToken() async {

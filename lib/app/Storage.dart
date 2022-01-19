@@ -3,17 +3,25 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<Function(SharedPreferences)> template(Function(SharedPreferences) callback) async {
+template(Function(SharedPreferences) callback) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   SharedPreferences storage = await SharedPreferences.getInstance();
 
-  return callback(storage);
+  callback(storage);
+
+  return;
 }
 
-void saveString(String key, String value) async { await template((storage) => storage.setString(key, value)); }
+Future<SharedPreferences> getStorage() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences storage = await SharedPreferences.getInstance();
+  return storage;
+}
 
-void saveInt(String key, int value) async { await template((storage) => storage.setInt(key, value)); }
+void saveString(String key, String value) async { await template((storage) { storage.setString(key, value); });}
+
+void saveInt(String key, int value) async { await template((storage) => storage.setInt(key, value));}
 
 void saveBool(String key, bool value) async { await template((storage) => storage.setBool(key, value)); }
 
@@ -50,7 +58,7 @@ Future<int> getInt(String key) async {
   await template((storage) {
     int? tmp = storage.getInt(key);
 
-    result = (tmp == 0) ? 0 : 1;
+    result = (tmp == 0) ? 0 : tmp!;
   });
 
   return result;

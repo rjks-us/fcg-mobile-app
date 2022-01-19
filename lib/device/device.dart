@@ -39,6 +39,9 @@ register() async {
       'ios': '15.0.2',
       'id': '37612t687xdt167854zq8118z243875zr78zwe87rztcc67t278z78cz32c87zn7843z5b',
     },
+    'settings': {
+      'notifications': true,
+    },
     'courses': courses,
     'class': classId,
     'push': push
