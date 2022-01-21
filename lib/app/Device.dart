@@ -4,7 +4,6 @@ import 'package:fcg_app/app/Account.dart';
 import 'package:fcg_app/app/Storage.dart';
 import 'package:fcg_app/app/structure/DeviceInfoState.dart';
 import 'package:fcg_app/app/utils/DeviceInfo.dart';
-import 'package:fcg_app/device/device.dart';
 import 'package:fcg_app/firebase/Notification.dart';
 import 'package:fcg_app/network/RequestHandler.dart' as RequestHandler;
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,22 +14,22 @@ class Device {
 
   Account account = new Account();
 
-  late AppInfo appInfo;
+  // late AppInfo appInfo;
   late AppSetting appSetting;
 
   late DeviceInfoState deviceInfoState;
 
   Device() {
-    this.appInfo = new AppInfo();
+    // this.appInfo = new AppInfo();
     this.appSetting = new AppSetting();
   }
 
   ///Must me called before any action is performed
   Future<void> loadAssets() async {
-    this.appInfo = new AppInfo();
+    // this.appInfo = new AppInfo();
     this.appSetting = new AppSetting();
 
-    await this.appInfo.load();
+    // await this.appInfo.load();
     await this.appSetting.load();
   }
 
@@ -41,9 +40,9 @@ class Device {
     return (token.toString().isNotEmpty && refreshToken.toString().isNotEmpty);
   }
 
-  AppInfo getAppInfo() {
-    return this.appInfo;
-  }
+  // // AppInfo getAppInfo() {
+  // //   return this.appInfo;
+  // }
 
   Account getAccount() {
     return this.account;
@@ -569,37 +568,37 @@ class AppSetting {
   }
 }
 
-class AppInfo {
-
-  late Map<String, dynamic> appInfoData;
-
-  AppInfo();
-
-  load() async {
-    final String response = await rootBundle.loadString('fcg_manifest.json');
-    appInfoData = await json.decode(response);
-  }
-
-  String getAppAuthor() {
-    return appInfoData['author'];
-  }
-
-  String getAppVersion() {
-    return appInfoData['version'];
-  }
-
-  String getWebsite() {
-    return appInfoData['website'];
-  }
-
-  String getContact() {
-    return appInfoData['contact'];
-  }
-
-  String getProvider() {
-    return appInfoData['provider'];
-  }
-}
+// class AppInfo {
+//
+//   late Map<String, dynamic> appInfoData;
+//
+//   AppInfo();
+//
+//   load() async {
+//     final String response = await rootBundle.loadString('fcg_manifest.json');
+//     appInfoData = await json.decode(response);
+//   }
+//
+//   String getAppAuthor() {
+//     return appInfoData['author'];
+//   }
+//
+//   String getAppVersion() {
+//     return appInfoData['version'];
+//   }
+//
+//   String getWebsite() {
+//     return appInfoData['website'];
+//   }
+//
+//   String getContact() {
+//     return appInfoData['contact'];
+//   }
+//
+//   String getProvider() {
+//     return appInfoData['provider'];
+//   }
+// }
 
 Future<String> _awaitFCMToken() async {
   String token = 'TOKEN';

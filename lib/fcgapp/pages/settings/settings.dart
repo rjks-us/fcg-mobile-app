@@ -1,14 +1,9 @@
 import 'dart:io';
 
 import 'package:fcg_app/app/Account.dart';
-import 'package:fcg_app/app/Storage.dart';
-import 'package:fcg_app/app/Timetable.dart';
-import 'package:fcg_app/fcgapp/app.dart';
 import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
-import 'package:fcg_app/fcgapp/components/loading/loading_admination.dart';
 import 'package:fcg_app/fcgapp/components/settings_option.dart';
-import 'package:fcg_app/fcgapp/components/signature.dart';
 import 'package:fcg_app/fcgapp/components/subtitle_of_element.dart';
 import 'package:fcg_app/fcgapp/main.dart';
 import 'package:fcg_app/fcgapp/pages/settings/admin/admin_home.dart';
@@ -20,9 +15,6 @@ import 'package:fcg_app/fcgapp/pages/settings/options/app_change_name.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_notificaions.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_reset.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_studienzeit.dart';
-import 'package:fcg_app/fcgapp/pages/setup/setup_class.dart';
-import 'package:fcg_app/fcgapp/pages/setup/setup_courses.dart';
-import 'package:fcg_app/fcgapp/pages/setup/setup_name.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +60,7 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
 
   launchURL(String url) async {
     if (await canLaunch(url)) {
-      await launch(url, forceWebView: true);
+      await launch(url, forceWebView: false, enableJavaScript: true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Die Website konnte nicht geöffnet werden"),
@@ -238,6 +230,7 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
                     ),
                     Text('Made by Robert J. Kratz', style: TextStyle(color: Colors.grey, fontSize: 16)),
                     Text('Powered by rjks.us', style: TextStyle(color: Colors.white, fontSize: 18)), ///TODO: IMPORTANT, GET OBJECT FROM WHEN ITS CREATED FROM main.dart
+                    Text('Version 1.0.1', style: TextStyle(color: Colors.grey, fontSize: 18)), ///TODO: IMPORTANT, GET OBJECT FROM WHEN ITS CREATED FROM main.dart
                     BlockSpacer(height: 100)
                   ],
                 ),

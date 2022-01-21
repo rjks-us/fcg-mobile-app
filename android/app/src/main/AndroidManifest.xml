@@ -1,7 +1,31 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="us.rjks.fcg_app">
+
+    <queries>
+        <!-- If your app opens https URLs -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- If your app makes calls -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <!-- If your sends SMS messages -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="smsto" />
+        </intent>
+        <!-- If your app sends emails -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
+        </intent>
+    </queries>
+
    <application
-        android:label="fcg_app"
+        android:label="FCG App"
         android:icon="@mipmap/ic_launcher">
        <activity
            android:name=".MainActivity"
@@ -10,29 +34,6 @@
            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
            android:hardwareAccelerated="true"
            android:windowSoftInputMode="adjustResize">
-
-<!--           <queries>-->
-<!--               &lt;!&ndash; If your app opens https URLs &ndash;&gt;-->
-<!--               <intent>-->
-<!--                   <action android:name="android.intent.action.VIEW" />-->
-<!--                   <data android:scheme="https" />-->
-<!--               </intent>-->
-<!--               &lt;!&ndash; If your app makes calls &ndash;&gt;-->
-<!--               <intent>-->
-<!--                   <action android:name="android.intent.action.DIAL" />-->
-<!--                   <data android:scheme="tel" />-->
-<!--               </intent>-->
-<!--               &lt;!&ndash; If your sends SMS messages &ndash;&gt;-->
-<!--               <intent>-->
-<!--                   <action android:name="android.intent.action.SENDTO" />-->
-<!--                   <data android:scheme="smsto" />-->
-<!--               </intent>-->
-<!--               &lt;!&ndash; If your app sends emails &ndash;&gt;-->
-<!--               <intent>-->
-<!--                   <action android:name="android.intent.action.SEND" />-->
-<!--                   <data android:mimeType="*/*" />-->
-<!--               </intent>-->
-<!--           </queries>-->
 
            <intent-filter>
                <action android:name="FLUTTER_NOTIFICATION_CLICK" />

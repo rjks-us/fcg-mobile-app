@@ -8,7 +8,6 @@ import 'package:fcg_app/fcgapp/pages/setup/setup_name.dart';
 import 'package:fcg_app/fcgapp/pages/setup/setup_overview.dart';
 import 'package:fcg_app/fcgapp/pages/setup/setup_permission.dart';
 import 'package:fcg_app/fcgapp/pages/splash/splash_screen.dart';
-import 'package:fcg_app/pages/splash/splashscreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,9 +30,6 @@ void main() async {
           systemNavigationBarColor: Colors.transparent
       )
   );
-
-  ///await device.loadAssets();
-
   runApp(Main());
 }
 
@@ -168,5 +164,17 @@ class _MainState extends State<Main> {
         }
       },
     );
+  }
+}
+
+class Init {
+  Init._();
+  static final instance = Init._();
+
+  Future initialize() async {
+    // This is where you can initialize the resources needed by your app while
+    // the splash screen is displayed.  Remove the following example because
+    // delaying the user experience is a bad design practice!
+
   }
 }

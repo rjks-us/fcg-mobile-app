@@ -30,7 +30,7 @@ class _NativeSplashScreenState extends State<NativeSplashScreen> {
                       ) ,
                       child: ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(30)),
-                        child: Image.asset("assets/img/fcg_app_logo.png"),
+                        child: Image.asset("assets/img/fcg_app_logo.png", height: 160,),
                       ),
                     ),
                     Container(

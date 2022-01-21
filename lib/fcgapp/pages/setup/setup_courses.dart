@@ -182,7 +182,7 @@ class _SetCoursesPageState extends State<SetCoursesPage> {
                             },
                           )
                       ),
-                      BlockSpacer(height: 100)
+                      BlockSpacer(height: 150)
                     ],
                   ),
                 )

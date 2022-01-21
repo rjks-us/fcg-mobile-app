@@ -1,4 +1,3 @@
-import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/app/Timetable.dart';
 import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/class_selection_card.dart';
