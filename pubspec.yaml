@@ -59,6 +59,8 @@ flutter_icons:
 flutter:
   assets:
     - ./assets/
+    - ./assets/fcg_manifest.json
+    - ./assets/app_config.json
     - ./assets/img/
   fonts:
     - family: NunitoSans

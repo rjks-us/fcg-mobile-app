@@ -1,18 +1,21 @@
 import 'dart:async';
 
+import 'package:fcg_app/app/Account.dart';
 import 'package:fcg_app/app/Timetable.dart';
 import 'package:fcg_app/app/utils/TimetableUtils.dart';
 import 'package:fcg_app/fcgapp/components/subtitle_of_element.dart';
+import 'package:fcg_app/fcgapp/main.dart';
 import 'package:fcg_app/fcgapp/utils/timetable/timetable_bottom_sheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class TimetableContentCard extends StatefulWidget {
-  const TimetableContentCard({Key? key, required this.timetableEntry, required this.activeBlock, required this.isOver}) : super(key: key);
+  const TimetableContentCard({Key? key, required this.timetableEntry, required this.activeBlock, required this.isOver, required this.showManipulizer}) : super(key: key);
 
   final TimetableEntry timetableEntry;
   final int activeBlock;
   final bool isOver;
+  final bool showManipulizer;
 
   @override
   _TimetableContentCardState createState() => _TimetableContentCardState();
@@ -20,6 +23,10 @@ class TimetableContentCard extends StatefulWidget {
 
 class _TimetableContentCardState extends State<TimetableContentCard> {
 
+  void _refresh() {
+    if(this.mounted) setState(() {});
+  }
+  
   Color getColor(int state) {
     switch(state) {
       case 0: return Colors.green;
@@ -27,6 +34,12 @@ class _TimetableContentCardState extends State<TimetableContentCard> {
       case 2: return Colors.orange;
       default: return Colors.grey;
     }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
   }
 
   @override
@@ -52,7 +65,7 @@ class _TimetableContentCardState extends State<TimetableContentCard> {
                   )
               ),
               Expanded(child: GestureDetector(
-                onTap: () => showTimeTableBottomModalContext(context, widget.timetableEntry),
+                onTap: () => showTimeTableBottomModalContext(context, widget.timetableEntry, widget.showManipulizer),
                 child: Container(
                   // width: MediaQuery.of(context).size.width,
                   height: 60.0,
@@ -98,7 +111,6 @@ class _TimetableContentCardState extends State<TimetableContentCard> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     Container(
-                                      width: 180,
                                       child: Text(
                                         widget.timetableEntry.timetableSubject.name,
                                         overflow: TextOverflow.ellipsis,
@@ -107,7 +119,6 @@ class _TimetableContentCardState extends State<TimetableContentCard> {
                                       ),
                                     ),
                                     Container(
-                                      width: 180,
                                       child: Text(
                                         widget.timetableEntry.timetableTeacher.getFullName(),
                                         overflow: TextOverflow.ellipsis,
@@ -224,7 +235,6 @@ class _TimetableEmptyCardState extends State<TimetableEmptyCard> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: <Widget>[
                                     Container(
-                                      width: 180,
                                       child: Text(
                                         'Freistunde',
                                         overflow: TextOverflow.ellipsis,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +15,31 @@ class ProgressBarCard extends StatefulWidget {
 }
 
 class _ProgressBarCardState extends State<ProgressBarCard> {
+
+  Timer? _timer;
+
+  void _refresh() {
+    if(this.mounted) setState(() {});
+  }
+
+  void _refreshSchedule() {
+    _timer = new Timer(Duration(seconds: 3), () {
+      print('aaa');
+      if(this.mounted) {
+        _refresh();
+      } else {
+        _timer!.cancel();
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(

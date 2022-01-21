@@ -1,4 +1,5 @@
 import 'package:fcg_app/app/DateConverter.dart';
+import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
 import 'package:fcg_app/fcgapp/components/notification_card.dart';
 import 'package:fcg_app/fcgapp/components/title_card.dart';
@@ -28,20 +29,19 @@ class _MainNotificationContentPageState extends State<MainNotificationContentPag
   }
 
   Future<void> _onRefresh() async {
-
-    print('Home refresh pressed');
     _lastRefresh = new DateTime.now();
-
     _refresh();
   }
 
   Future<void> _fetchNotifications() async {
 
+    _notificationElementsWidgets = [];
+
     List<NotificationElement> _notifications = await device.getDeviceNotifications();
 
     _notifications.forEach((element) {
       _notificationElementsWidgets.add(
-          NotificationCard(title: element.message, subtitle: element.title, description: element.sender, color: Colors.indigo, iat: element.getDateTime())
+          NotificationCard(title: element.message, subtitle: element.title, description: 'Benachrichtigung', color: Colors.indigo, iat: element.getDateTime())
       );
     });
   }
@@ -144,7 +144,8 @@ class _MainNotificationContentPageState extends State<MainNotificationContentPag
                   ),
                   SmallSubInformationTextText(
                       title: 'Letztes Update ${_lastRefresh.hour}:${_lastRefresh.minute}\nAlle Angaben ohne Gewähr'
-                  )
+                  ),
+                  BlockSpacer(height: 100)
                 ],
               ),
             ),

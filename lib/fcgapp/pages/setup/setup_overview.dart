@@ -1,4 +1,5 @@
 import 'package:fcg_app/app/Timetable.dart';
+import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/buttons.dart';
 import 'package:fcg_app/fcgapp/components/course_card.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
@@ -133,7 +134,8 @@ class _SetUpConfirmPageState extends State<SetUpConfirmPage> {
                   ),
                   SmallSubInformationTextText(
                       title: 'Du hast insgesamt $_selectedCourses Kurse ausgewählt'
-                  )
+                  ),
+                  BlockSpacer(height: 100)
                 ],
               ),
             )

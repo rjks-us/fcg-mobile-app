@@ -14,11 +14,13 @@ class Request {
   late http.Request httpRequest;
 
   Request(this.method, this.router) {
-    this.httpRequest = http.Request(method, Uri.parse("http://localhost:8080" + '/' + router));
+    // this.httpRequest = http.Request(method, Uri.parse("http://localhost:8080" + '/' + router));
+    this.httpRequest = http.Request(method, Uri.parse("https://api.fcg-app.de" + '/' + router));
   }
 
   setHost(String host) async {
-    httpRequest = http.Request(this.method, Uri.parse("http://localhost:8080" + '/' + this.router));
+    httpRequest = http.Request(this.method, Uri.parse("https://api.fcg-app.de" + '/' + this.router));
+    // httpRequest = http.Request(this.method, Uri.parse("http://localhost:8080" + '/' + this.router));
   }
 
   setHeader(Map<String, String> headers) {
@@ -58,6 +60,8 @@ class Response {
     try {
 
       print('[API] http-request: ${httpRequest.method}: ${httpRequest.url}');
+      // print(httpRequest.headers);
+      // print(httpRequest.body);
 
       var response =  await this.httpRequest.send();
 
@@ -103,6 +107,7 @@ class Response {
 
       switch(getStatusCode()) {
         case 200: success(data); break;
+        case 201: success(data); break;
         case 401: unauthorized(data); break;
         case 404: notFound(data); break;
         case 500: error(data); break;
@@ -113,6 +118,7 @@ class Response {
 
       switch(getStatusCode()) {
         case 200: success(data); break;
+        case 201: success(data); break;
         case 401: unauthorized(data); break;
         case 404: notFound(data); break;
         case 500: error(data); break;

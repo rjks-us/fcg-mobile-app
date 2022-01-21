@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fcg_app/app/Account.dart';
 import 'package:fcg_app/app/utils/TimetableUtils.dart';
 import 'package:fcg_app/fcgapp/components/question_card.dart';
 import 'package:fcg_app/fcgapp/components/timetable_card.dart';
@@ -11,6 +12,8 @@ import 'package:flutter/material.dart';
 class TimetableBuilder {
 
   TimetableHandler timetableHandler = new TimetableHandler();
+
+  bool showManipulizer = false;
 
   late DateTime dateTime;
   late int classId;
@@ -86,13 +89,20 @@ class TimetableBuilder {
 
   Future<List<Widget>> toWidget(bool indicateOverSubjects) async {
 
+    AccountState accountState = await device.getAccountState();
+
+    if(accountState == AccountState.LOGGED_IN) {
+      bool hasPermission = await device.account.hasScope(3);
+      showManipulizer = hasPermission;
+    }
+
     Map<String, List<TimetableEntry>> _sortedTimetableElements = sortElements(this.timetableEntry);
 
     List<TimetableEntry> _mergedElements = _mergeMultipleElement(_sortedTimetableElements);
 
     List<TimetableEntry> _replacedStudienzeitList = await _replaceStudienzeit(_mergedElements);
 
-    List<Widget> _finElements = _fillGapsWithFreeTime(_replacedStudienzeitList, indicateOverSubjects);
+    List<Widget> _finElements = _fillGapsWithFreeTime(_replacedStudienzeitList, indicateOverSubjects, showManipulizer);
 
     return _finElements;
 
@@ -150,7 +160,7 @@ class TimetableBuilder {
     return _finalTimetableCollection;
   }
 
-  List<Widget> _fillGapsWithFreeTime(List<TimetableEntry> _timetableSortedCollection, bool indicateOverSubjects) {
+  List<Widget> _fillGapsWithFreeTime(List<TimetableEntry> _timetableSortedCollection, bool indicateOverSubjects, bool showManipulationButton) {
     List<Widget> _finalTimetableCollection = [];
 
     List<int> _blocks = [];
@@ -180,6 +190,7 @@ class TimetableBuilder {
         _finalTimetableCollection.add(new TimetableContentCard(
             timetableEntry: _tmpTimetableEntry,
             activeBlock: block,
+            showManipulizer: showManipulationButton,
             isOver: (!indicateOverSubjects) ? false : (new DateTime.now().isAfter(new DateTime(
                 _tmpTimetableEntry.date.year,
                 _tmpTimetableEntry.date.month,

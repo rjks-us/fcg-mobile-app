@@ -7,7 +7,7 @@ class NotificationElement {
   NotificationElement(this.title, this.message, this.sender, this.iat, this.notificationAction);
 
   DateTime getDateTime() {
-    return new DateTime.fromMicrosecondsSinceEpoch(this.iat);
+    return new DateTime.fromMicrosecondsSinceEpoch(this.iat * 1000);
   }
 }
 

@@ -31,6 +31,9 @@ void main() async {
           systemNavigationBarColor: Colors.transparent
       )
   );
+
+  ///await device.loadAssets();
+
   runApp(Main());
 }
 

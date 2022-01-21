@@ -1,5 +1,6 @@
 import 'package:fcg_app/api/timetable.dart';
 import 'package:fcg_app/app/Timetable.dart';
+import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/class_selection_card.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
 import 'package:fcg_app/fcgapp/components/error_messages.dart';
@@ -88,67 +89,67 @@ class _SetClassPageState extends State<SetClassPage> {
             color: Colors.indigo,
             onRefresh: _onRefresh,
             child: DefaultBackgroundDesign(
-                child: SingleChildScrollView(
-                  controller: ScrollController(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Container(
-                        margin: EdgeInsets.only(top: 80),
-                        child: FCGAppLogo(),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 20.0, top: 30.0, bottom: 5.0, right: 20.0),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 5.0),
-                          child: Text('Bitte wähle deine\nKlasse/Stufe aus', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 29),),
-                        )
-                      ),
-                      Container(
+              child: SingleChildScrollView(
+                controller: ScrollController(),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(top: 80),
+                      child: FCGAppLogo(),
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(left: 20.0, top: 30.0, bottom: 5.0, right: 20.0),
+                      child: Container(
                         width: MediaQuery.of(context).size.width,
-                        margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
-                        child: Center(
-                          child: Text('Wähle deine Klasse indem du auf sie klickst', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 18),),
+                        margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 5.0),
+                        child: Text('Bitte wähle deine\nKlasse/Stufe aus', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 29),),
+                      )
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
+                      child: Center(
+                        child: Text('Wähle deine Klasse indem du auf sie klickst', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 18),),
+                      ),
+                    ),
+                    Container(
+                        child: FutureBuilder(
+                          future: _fetchClasses(),
+                          builder: (context, AsyncSnapshot snapshot) {
+
+                            if(snapshot.connectionState == ConnectionState.waiting) {
+                              ///preview loading animation
+
+                              return new Container(
+                                margin: EdgeInsets.only(bottom: 50),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: <Widget>[
+                                    ClassPreLoadingCard(),
+                                    ClassPreLoadingCard(),
+                                    ClassPreLoadingCard(),
+                                    ClassPreLoadingCard(),
+                                    ClassPreLoadingCard(),
+                                    ClassPreLoadingCard(),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              ///Release data
+
+                              return new Container(
+                                margin: EdgeInsets.only(bottom: 50),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: _finalLoadedClassList,
+                                ),
+                              );
+                            }
+                          },
                         ),
                       ),
-                      Container(
-                          child: FutureBuilder(
-                            future: _fetchClasses(),
-                            builder: (context, AsyncSnapshot snapshot) {
-
-                              if(snapshot.connectionState == ConnectionState.waiting) {
-                                ///preview loading animation
-
-                                return new Container(
-                                  margin: EdgeInsets.only(bottom: 50),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: <Widget>[
-                                      ClassPreLoadingCard(),
-                                      ClassPreLoadingCard(),
-                                      ClassPreLoadingCard(),
-                                      ClassPreLoadingCard(),
-                                      ClassPreLoadingCard(),
-                                      ClassPreLoadingCard(),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                ///Release data
-
-                                return new Container(
-                                  margin: EdgeInsets.only(bottom: 50),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: _finalLoadedClassList,
-                                  ),
-                                );
-                              }
-
-                            },
-                          )
-                      ),
+                      BlockSpacer(height: 100)
                     ],
                   ),
                 )

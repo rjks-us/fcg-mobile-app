@@ -1,5 +1,6 @@
 import 'package:fcg_app/app/DateConverter.dart';
 import 'package:fcg_app/app/Timetable.dart';
+import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
 import 'package:fcg_app/fcgapp/components/error_messages.dart';
 import 'package:fcg_app/fcgapp/components/timetable_card.dart';
@@ -255,10 +256,7 @@ class _MainWeekPlanWeekPageInstanceState extends State<MainWeekPlanWeekPageInsta
   }
 
   Future<void> _onRefresh() async {
-
-    print('Week refresh pressed');
     _lastRefresh = new DateTime.now();
-
     _refresh();
   }
 
@@ -397,7 +395,8 @@ class _MainWeekPlanWeekPageInstanceState extends State<MainWeekPlanWeekPageInsta
                   ),
                   SmallSubInformationTextText(
                       title: 'Letztes Update ${_lastRefresh.hour}:${_lastRefresh.minute}\nAlle Angaben ohne Gewähr'
-                  )
+                  ),
+                  BlockSpacer(height: 130)
                 ],
               ),
             )

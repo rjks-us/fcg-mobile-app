@@ -18,7 +18,50 @@ class NotificationCard extends StatefulWidget {
 
 class _NotificationCardState extends State<NotificationCard> {
 
-  String _timeAgo = 'vor 2T';
+  String _getTimeAgo() {
+    DateTime _dateTime = DateTime.now();
+    DateTimeRange _dateTimeRange = DateTimeRange(start: widget.iat, end: _dateTime);
+
+    String _timeMessage = '-';
+
+    if(_dateTimeRange.duration.inSeconds <= 60) {
+
+      if(_dateTimeRange.duration.inSeconds == 0) {
+        _timeMessage = 'Jetzt';
+      } else if(_dateTimeRange.duration.inSeconds == 1) {
+        _timeMessage = '${_dateTimeRange.duration.inSeconds} Sekunde';
+      } else {
+        _timeMessage = '${_dateTimeRange.duration.inSeconds} Sekunden';
+      }
+
+    } else if(_dateTimeRange.duration.inMinutes <= 60) {
+
+      if(_dateTimeRange.duration.inSeconds == 1) {
+        _timeMessage = '${_dateTimeRange.duration.inMinutes} Minute';
+      } else {
+        _timeMessage = '${_dateTimeRange.duration.inMinutes} Minuten';
+      }
+
+    } else if(_dateTimeRange.duration.inHours <= 24) {
+
+      if(_dateTimeRange.duration.inHours == 1) {
+        _timeMessage = '${_dateTimeRange.duration.inHours} Stunde';
+      } else {
+        _timeMessage = '${_dateTimeRange.duration.inHours} Stunden';
+      }
+
+    } else {
+
+      if(_dateTimeRange.duration.inDays == 1) {
+        _timeMessage = '${_dateTimeRange.duration.inMinutes} Tag';
+      } else {
+        _timeMessage = '${_dateTimeRange.duration.inMinutes} Tage';
+      }
+
+    }
+
+    return _timeMessage;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +153,7 @@ class _NotificationCardState extends State<NotificationCard> {
                     child: Padding(
                       padding: EdgeInsets.only(top: 7, bottom: 7, left: 10, right: 10),
                       child: Text(
-                        _timeAgo,
+                        _getTimeAgo(),
                         style: TextStyle(
                             fontFamily: 'Nunito-Regular',
                             fontSize: 12.0,

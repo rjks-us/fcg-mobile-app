@@ -20,9 +20,17 @@ class MainHomeContentPage extends StatefulWidget {
 
 class _MainHomeContentPageState extends State<MainHomeContentPage> {
 
+  bool _tmpIgnoreFutureForProgressBarReload = false;
+
   DateTime _lastRefresh = new DateTime.now();
 
   List<Widget> _finalTimeTableCollection = [];
+
+  List<TimetableEntry> _timetableEntry = [];
+
+  String _progressBarTitle = 'Daten werden geladen...';
+  double _progressBarValue = 0.0;
+  bool _progressBarVisible = true;
 
   List<int> _subscribedSubjectList = [];
   int _subscribedClassId = 0;
@@ -30,24 +38,20 @@ class _MainHomeContentPageState extends State<MainHomeContentPage> {
   String _username = '';
   String _currentDate = '';
 
-  String _progressBarTitle = 'Daten werden geladen...';
-  double _progressBarValue = 0.0;
-  bool _progressBarVisible = true;
-
   void _refresh() {
     if(this.mounted) setState(() {});
   }
 
   Future<void> _onRefresh() async {
-
-    print('Home refresh pressed');
     _lastRefresh = new DateTime.now();
-
     _refresh();
-
   }
 
   Future<void> _fetchTimetable() async {
+    if(_tmpIgnoreFutureForProgressBarReload) {
+      _tmpIgnoreFutureForProgressBarReload = false;
+      return;
+    }
 
     _finalTimeTableCollection = [];
 
@@ -60,14 +64,72 @@ class _MainHomeContentPageState extends State<MainHomeContentPage> {
 
     if(timetableBuilder.noResult) {
       _finalTimeTableCollection.add(new NoEntryFoundError(refreshPressed: () => _refresh()));
+      _progressBarVisible = false;
+
     } else if(timetableBuilder.holiday) {
       _finalTimeTableCollection.add(new HolidayMessage(refreshPressed: () => _refresh(), holidayName: timetableBuilder.timetableHoliday.longName,));
+      _progressBarVisible = false;
+
     } else if(timetableBuilder.weekend) {
       _finalTimeTableCollection.add(new WeekendMessage(refreshPressed: () => _refresh()));
+      _progressBarVisible = false;
+
     } else if(timetableBuilder.error) {
       _finalTimeTableCollection.add(new NoConnectionAvailableError(refreshPressed: () => _refresh()));
+      _progressBarVisible = false;
     } else {
       _finalTimeTableCollection = await timetableBuilder.toWidget(true);
+      _timetableEntry = timetableBuilder.timetableEntry;
+      _progressBarVisible = true;
+    }
+
+    await _getProgressBar(timetableBuilder.timetableEntry);
+
+    _refresh();
+
+    _tmpIgnoreFutureForProgressBarReload = true;
+  }
+
+  Future<void> _getProgressBar(List<TimetableEntry> timetable) async {
+    try {
+      TimetableEntry first = timetable[0], second = timetable[timetable.length - 1];
+
+      for(int i = 0; i < timetable.length; i++) {
+        if(timetable[i].timetableEntryState.state == 0 || timetable[i].timetableEntryState.state == 2) {
+          first = timetable[i];
+          break;
+        }
+      }
+
+      for(int i = timetable.length - 1; i >= 0; i--) {
+        if(timetable[i].timetableEntryState.state == 0 || timetable[i].timetableEntryState.state == 2) {
+          second = timetable[i];
+          break;
+        }
+      }
+
+      DateTime start = new DateTime(first.date.year, first.date.month, first.date.day, first.date.hour, first.date.minute);
+      DateTime end = new DateTime(second.date.year, second.date.month, second.date.day, second.endHour, second.endMinute);
+
+      DateTime now = new DateTime.now();
+
+      if(start.isAfter(now)) {
+        _progressBarValue = 0.0;
+      } else if(end.isBefore(now)) {
+        _progressBarValue = 1.0;
+        _progressBarTitle = 'Du hast den Tag geschafft!';
+      } else {
+        int total = DateTimeRange(start: start, end: end).duration.inSeconds;
+        int ago = DateTimeRange(start: start, end: now).duration.inSeconds;
+
+        int current = total - ago;
+
+        _progressBarValue = 1.0 - ((current / total) * 100) / 100;
+
+        _progressBarTitle = 'Du hast bereits ${(_progressBarValue * 100).toStringAsFixed(0)}% geschafft';
+      }
+    } catch(_) {
+      print(_);
     }
   }
 
@@ -82,8 +144,8 @@ class _MainHomeContentPageState extends State<MainHomeContentPage> {
   @override
   void initState() {
     // TODO: implement initState
-    super.initState();
     loadDeviceInformation();
+    super.initState();
 
   }
 
@@ -181,34 +243,28 @@ class _MainHomeContentPageState extends State<MainHomeContentPage> {
                       )
                   ),
                   Container(
-                    child: FutureBuilder(
-                      future: _fetchTimetable(),
-                      builder: (context, AsyncSnapshot snapshot) {
-
-                        if(snapshot.connectionState == ConnectionState.waiting) {
-                          ///preview loading animation
-
-                          return new Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              TimetablePreLoadingCard(),
-                              TimetablePreLoadingCard(),
-                              TimetablePreLoadingCard(),
-                              TimetablePreLoadingCard(),
-                              TimetablePreLoadingCard(),
-                            ],
-                          );
-                        } else {
-                          ///Release data
-
-                          return new Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: _finalTimeTableCollection,
-                          );
-                        }
-
-                      },
-                    )
+                      child: FutureBuilder(
+                        future: _fetchTimetable(),
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if(snapshot.connectionState == ConnectionState.waiting) {
+                            return new Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                TimetablePreLoadingCard(),
+                                TimetablePreLoadingCard(),
+                                TimetablePreLoadingCard(),
+                                TimetablePreLoadingCard(),
+                                TimetablePreLoadingCard(),
+                              ],
+                            );
+                          } else {
+                            return new Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: _finalTimeTableCollection,
+                            );
+                          }
+                        },
+                      )
                   ),
                   SmallSubInformationTextText(
                       title: 'Letztes Update ${_lastRefresh.hour}:${_lastRefresh.minute}\nAlle Angaben ohne Gewähr'
@@ -223,3 +279,39 @@ class _MainHomeContentPageState extends State<MainHomeContentPage> {
     );
   }
 }
+
+class MainHomeContentPageContentProgressLoader extends StatefulWidget {
+  const MainHomeContentPageContentProgressLoader({Key? key, required this.refresh}) : super(key: key);
+
+  final Function(String, double, bool) refresh;
+
+  @override
+  _MainHomeContentPageContentProgressLoaderState createState() => _MainHomeContentPageContentProgressLoaderState();
+}
+
+class _MainHomeContentPageContentProgressLoaderState extends State<MainHomeContentPageContentProgressLoader> {
+
+  String _progressBarTitle = 'Daten werden geladen...';
+  double _progressBarValue = 0.0;
+  bool _progressBarVisible = true;
+
+  void _refresh(String title, double value, bool visible) {
+    this._progressBarTitle = title;
+    this._progressBarValue = value;
+    this._progressBarVisible = visible;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(left: 20.0, top: 15.0, bottom: 15.0, right: 20.0),
+      child: ProgressBarCard(
+        subtitle: 'Dein Tagesfortschritt',
+        title: _progressBarTitle,
+        value: _progressBarValue,
+        visible: _progressBarVisible,
+      ),
+    );
+  }
+}
+

@@ -1,4 +1,5 @@
 import 'package:fcg_app/app/Timetable.dart';
+import 'package:fcg_app/fcgapp/components/block_spacer.dart';
 import 'package:fcg_app/fcgapp/components/buttons.dart';
 import 'package:fcg_app/fcgapp/components/course_card.dart';
 import 'package:fcg_app/fcgapp/components/default_background_design.dart';
@@ -181,6 +182,7 @@ class _SetCoursesPageState extends State<SetCoursesPage> {
                             },
                           )
                       ),
+                      BlockSpacer(height: 100)
                     ],
                   ),
                 )

@@ -13,7 +13,8 @@ import 'dart:convert';
 
 class Device {
 
-  late Account account;
+  Account account = new Account();
+
   late AppInfo appInfo;
   late AppSetting appSetting;
 
@@ -44,8 +45,12 @@ class Device {
     return this.appInfo;
   }
 
-  Account getAccountInfo() {
+  Account getAccount() {
     return this.account;
+  }
+
+  Future<AccountState> getAccountState() async {
+    return account.hasAdminAccountRegistered();
   }
 
   AppSetting getAppSetting() {
@@ -181,6 +186,11 @@ class Device {
     return token;
   }
 
+  Future<bool> hasNotificationsEnabled() async {
+    bool token = await getBool('var-notifications-enabled');
+    return token;
+  }
+
   Future<String> getDeviceAPIRefreshToken() async {
     String refreshToken = await getString('global-access-refresh-token');
     return refreshToken;
@@ -206,6 +216,8 @@ class Device {
     return courseList;
   }
 
+  void updateDeviceNotificationState(bool state) { saveBool('var-notifications-enabled', state); }
+
   void updateDeviceAPIToken(String token) { saveString('global-access-toke', token); }
 
   void updateDeviceAPIRefreshToken(String refreshToken) { saveString('global-access-refresh-token', refreshToken); }
@@ -221,7 +233,7 @@ class Device {
     request.setHeader(request.buildAccessHeader(accessToken));
 
     request.setBody({
-      "token": "newToken"
+      "token": newToken
     });
 
     var response = request.send(), state = false;
@@ -356,11 +368,17 @@ class Device {
 
     var response = request.send(), state = false;
 
+    AccountState accountState = await this.getAccountState();
+
     await response.processResponse();
 
     response.onSuccess((data) {
       state = true;
       clearCache();
+
+      if(accountState == AccountState.LOGGED_IN) {
+        getAccount().signOut();
+      }
 
       print('[DEVICE] The Device has been deleted');
     });
@@ -499,6 +517,8 @@ class PreRegisteredDevice {
       saveIntList('var-courses', this.courseList);
       saveInt('var-class-id', this.classId);
       saveString('var-class-name', this.className);
+
+      saveBool('var-notifications-enabled', this.pushNotification);
 
       saveString('global-access-token', data['token']);
       saveString('global-access-refresh-token', data['refresh']);

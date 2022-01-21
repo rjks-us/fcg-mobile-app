@@ -1,8 +1,9 @@
 import 'package:fcg_app/app/Timetable.dart';
+import 'package:fcg_app/fcgapp/utils/admin/admin_manipulation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void showTimeTableBottomModalContext(BuildContext context, TimetableEntry timetableEntry) {
+void showTimeTableBottomModalContext(BuildContext context, TimetableEntry timetableEntry, bool showManipulizer) {
   Widget statusMessage = Container();
 
   int status = timetableEntry.timetableEntryState.state;
@@ -133,25 +134,32 @@ void showTimeTableBottomModalContext(BuildContext context, TimetableEntry timeta
                 //     ),
                 //   ),
                 // ),
-                Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: 80,
-                    child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          margin: EdgeInsets.all(20),
-                          color: Colors.indigo,
-                          child: Center(
-                            child: Text(
-                              'Stunde ändern',
-                              style: TextStyle(color: Colors.white),
+                Visibility(
+                  child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: 80,
+                      child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+
+                            Navigator.push(context, CupertinoPageRoute(builder: (context) => TimetableElementAdminManipulizePage(
+                              timetableEntry: timetableEntry,
+                            )));
+                          },
+                          child: Container(
+                            margin: EdgeInsets.all(20),
+                            color: Colors.indigo,
+                            child: Center(
+                              child: Text(
+                                'Stunde ändern',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
-                          ),
-                        )
-                    )
-                )
+                          )
+                      )
+                  ),
+                  visible: showManipulizer,
+                ),
               ],
             ),
           ),

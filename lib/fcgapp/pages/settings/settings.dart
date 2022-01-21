@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fcg_app/app/Account.dart';
 import 'package:fcg_app/app/Storage.dart';
 import 'package:fcg_app/app/Timetable.dart';
 import 'package:fcg_app/fcgapp/app.dart';
@@ -10,6 +11,8 @@ import 'package:fcg_app/fcgapp/components/settings_option.dart';
 import 'package:fcg_app/fcgapp/components/signature.dart';
 import 'package:fcg_app/fcgapp/components/subtitle_of_element.dart';
 import 'package:fcg_app/fcgapp/main.dart';
+import 'package:fcg_app/fcgapp/pages/settings/admin/admin_home.dart';
+import 'package:fcg_app/fcgapp/pages/settings/admin/admin_login.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_aboutpage.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_change_class.dart';
 import 'package:fcg_app/fcgapp/pages/settings/options/app_change_courses.dart';
@@ -36,6 +39,9 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
 
   String _fullSubscribedClassName = '';
   String _username = '';
+  String _deviceNameTitle = 'FCG-Schüler';
+
+  AccountState _accountState = AccountState.NOT_LOGGED_IN;
 
   void _refresh() {
     if(this.mounted) setState(() {});
@@ -44,6 +50,11 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
   Future<void> loadDeviceInformation() async {
     _username = await device.getDeviceUsername();
     _fullSubscribedClassName = await device.getDeviceClassName();
+
+    _accountState = await device.getAccountState();
+
+    if(_accountState == AccountState.LOGGED_IN) _deviceNameTitle = 'FCG-App Team';
+
     _refresh();
   }
 
@@ -130,7 +141,7 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
                       width: MediaQuery.of(context).size.width,
                       margin: EdgeInsets.only(left: 20.0, bottom: 20.0, right: 20.0),
                       child: Center(
-                        child: Text('FCG-Schüler', style: TextStyle(color: Colors.grey, fontSize: 20),),
+                        child: Text(_deviceNameTitle, style: TextStyle(color: Colors.grey, fontSize: 20),),
                       ),
                     ),
                     Container(
@@ -205,8 +216,16 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
                               onClickEvent: () => launchURL("https://robertkratz.dev?redirect=fcg-app")
                           ),
                           Line(title: 'System Einstellungen', blurred: false),
-                          SettingsOption(title: 'Anmelden', color: Colors.redAccent, icon: Icons.vpn_key, onClickEvent: () {
+                          SettingsOption(title: 'Administration', color: Colors.redAccent, icon: Icons.vpn_key, onClickEvent: () {
 
+                            Widget _followUp = AdminLoginPage();
+
+                            if(this._accountState == AccountState.LOGGED_IN) _followUp = AdminHomePage();
+
+                            Navigator.push(
+                                context,
+                                CupertinoPageRoute(builder: (context) => _followUp)
+                            );
                           }),
                           SettingsOption(title: 'App reset', color: Colors.redAccent, icon: Icons.delete, onClickEvent: () {
                             Navigator.push(
@@ -217,7 +236,8 @@ class _MainSettingContentPageState extends State<MainSettingContentPage> {
                         ],
                       ),
                     ),
-                    FullSignatureComponent(appInfo: device.appInfo), ///TODO: IMPORTANT, GET OBJECT FROM WHEN ITS CREATED FROM main.dart
+                    Text('Made by Robert J. Kratz', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    Text('Powered by rjks.us', style: TextStyle(color: Colors.white, fontSize: 18)), ///TODO: IMPORTANT, GET OBJECT FROM WHEN ITS CREATED FROM main.dart
                     BlockSpacer(height: 100)
                   ],
                 ),

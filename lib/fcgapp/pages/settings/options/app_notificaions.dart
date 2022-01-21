@@ -1,3 +1,5 @@
+import 'package:fcg_app/fcgapp/main.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -17,15 +19,60 @@ class _NotificationSettingsPage extends State<NotificationSettingsPage> {
   }
 
   load() async {
-    // swapped = await getBoolean('var-st-swapp');
-    swapped = true;
+    swapped = await device.hasNotificationsEnabled();
+    print(swapped);
     refresh();
   }
 
-  update(bool state) {
-    swapped = state;
-    // saveBoolean('var-st-swapp', state);
+  update(bool state) async {
+
+    if(state) {
+      NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized || settings.authorizationStatus == AuthorizationStatus.provisional) {
+        String token = '-';
+
+        try {
+          FirebaseMessaging.instance.getToken().then((value) {
+            if(value == null) {
+              token = 'FCM-DID-NOT-RETURN-ANY-RESULT';
+            } else {
+              token = value;
+            }
+            device.updatePushNotificationKey(token);
+          });
+          device.updateDeviceNotificationState(true);
+          swapped = true;
+        } catch(_) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Ein Fehler ist aufgetreten, bitte versuche es später erneut"),
+          ));
+          device.updateDeviceNotificationState(false);
+          swapped = false;
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Du musst Benachrichtigungen erlauben damit du welche erhältst"),
+        ));
+        device.updatePushNotificationKey('PERMISSION-DISABLED');
+        device.updateDeviceNotificationState(false);
+        swapped = false;
+      }
+    } else {
+      device.updatePushNotificationKey('PERMISSION-DISABLED');
+      device.updateDeviceNotificationState(false);
+      swapped = false;
+    }
     print('changed push notifications to $state');
+
     refresh();
   }
 
@@ -87,7 +134,7 @@ class _NotificationSettingsPage extends State<NotificationSettingsPage> {
                         activeColor: Colors.green,
                         thumbColor: Colors.white,
                         value: swapped,
-                        onChanged: (bool value) { setState(() {update(!swapped);}); },
+                        onChanged: (bool value) { update(!swapped); },
                       )
                     ],
                   ),
